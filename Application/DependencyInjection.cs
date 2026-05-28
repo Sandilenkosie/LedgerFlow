@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Application.Services;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AutoMapper;
 
 namespace Application
 {
@@ -9,7 +12,10 @@ namespace Application
     {
         public static IServiceCollection AddApplicationDI(this IServiceCollection services)
         {
-            // Register application services here
+            // Register AutoMapper profiles, MediatR handlers and other application services
+            services.AddAutoMapper(typeof(DependencyInjection).Assembly);
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+            services.AddSingleton<IJwtService, JwtService>();
             return services;
         }
     }

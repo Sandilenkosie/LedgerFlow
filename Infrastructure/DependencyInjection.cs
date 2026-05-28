@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Interfaces;
+using Infrastructure.Repositories;
 
 namespace Infrastructure
 {
@@ -11,6 +12,10 @@ namespace Infrastructure
         public static IServiceCollection AddInfrastructureDI(this IServiceCollection services, IConfiguration configuration)
         {
             // Register infrastructure services here
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Repositories
+            services.AddScoped<IUserRepository, UserRepository>();
             return services;
         }
     }

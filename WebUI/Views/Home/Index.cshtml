@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1>Welcome to LedgerFlow WebUI</h1>
+<p>This is a minimal scaffold. Use the Auth pages to register/login.</p>
+
+@{
+    var persons = ViewData["Persons"] as List<object>;
+}
+
+@if (persons != null && persons.Count > 0)
+{
+    <h3>Persons (from API)</h3>
+    <ul>
+    @foreach (var p in persons)
+    {
+        <li>@p</li>
+    }
+    </ul>
+}
+else
+{
+    <p>No persons returned from API.</p>
+}
