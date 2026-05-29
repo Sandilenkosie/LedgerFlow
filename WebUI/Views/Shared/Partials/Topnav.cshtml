@@ -1,0 +1,75 @@
+﻿<!-- Topbar -->
+<header class="topbar d-flex align-items-center justify-content-between fixed-top" style="z-index:1030;">
+    <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary d-md-none" id="mobileMenuBtn"><i class="bi bi-list"></i></button>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <input class="search-input" placeholder="Search guards, clients, schedules..." />
+        <button class="btn btn-light rounded-circle"><i class="bi bi-bell"></i></button>
+        <div class="dropdown">
+            <button class="btn btn-light rounded-pill dropdown-toggle" data-bs-toggle="dropdown">Admin</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item text-danger" href="#">Sign out</a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<!-- Topnav fixed toggle (bottom-right corner) -->
+<button id="topnavToggleBtn" class="btn btn-sm btn-outline-primary rounded-circle" style="position:fixed;bottom:.75rem;right:.75rem;z-index:1200;" title="Toggle fixed topnav">
+    <i id="topnavToggleIcon" class="bi bi-pin-fill" aria-hidden="true"></i>
+</button>
+
+<script>
+    (function(){
+        var header = document.querySelector('.topbar');
+        var btn = document.getElementById('topnavToggleBtn');
+        var icon = document.getElementById('topnavToggleIcon');
+
+        if (!header || !btn || !icon) return;
+
+        function setBodyPaddingForFixed(enabled){
+            if (enabled) {
+                var h = Math.ceil(header.getBoundingClientRect().height);
+                document.body.style.paddingTop = h + 'px';
+            } else {
+                document.body.style.paddingTop = '';
+            }
+        }
+
+        function updateUI(isFixed){
+            if (isFixed) {
+                icon.classList.remove('bi-pin');
+                icon.classList.add('bi-pin-fill');
+                btn.setAttribute('aria-pressed','true');
+            } else {
+                icon.classList.remove('bi-pin-fill');
+                icon.classList.add('bi-pin');
+                btn.setAttribute('aria-pressed','false');
+            }
+            setBodyPaddingForFixed(isFixed);
+        }
+
+        // Initialize from saved preference if available, otherwise use current header state
+        var saved = localStorage.getItem('topnavFixed');
+        var isFixed = (saved === null) ? header.classList.contains('fixed-top') : (saved === 'true');
+        if (isFixed) header.classList.add('fixed-top'); else header.classList.remove('fixed-top');
+        updateUI(isFixed);
+
+        btn.addEventListener('click', function(){
+            isFixed = !header.classList.contains('fixed-top');
+            if (isFixed) header.classList.add('fixed-top'); else header.classList.remove('fixed-top');
+            localStorage.setItem('topnavFixed', isFixed ? 'true' : 'false');
+            updateUI(isFixed);
+        });
+
+        // Keep padding correct on window resize (header height may change)
+        window.addEventListener('resize', function(){
+            if (header.classList.contains('fixed-top')) setBodyPaddingForFixed(true);
+        });
+    })();
+</script>

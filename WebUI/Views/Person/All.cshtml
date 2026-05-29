@@ -1,0 +1,180 @@
+﻿@{
+    ViewData["Title"] = "All People";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class=" py-0">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">People Management</h2>
+            <p class="text-muted mb-0">Manage persons, accounts and transactions</p>
+        </div>
+
+        <button class="btn btn-primary px-4 py-2 rounded-pill">
+            <i class="fa-solid fa-plus me-2"></i>
+            Add Person
+        </button>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDE -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm sidebar-card p-3">
+
+                <!-- Search -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search people...">
+                    </div>
+                </div>
+
+                <!-- Person -->
+                <div class="person-item active p-3 mb-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="mb-0 fw-bold">John Smith</h6>
+                            <small>john@example.com</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="person-item p-3 mb-3 d-flex align-items-center justify-content-between bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="mb-0 fw-bold">Sarah Johnson</h6>
+                            <small class="text-muted">sarah@example.com</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="person-item p-3 mb-3 d-flex align-items-center justify-content-between bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="mb-0 fw-bold">Michael Brown</h6>
+                            <small class="text-muted">michael@example.com</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="person-item p-3 mb-3 d-flex align-items-center justify-content-between bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="mb-0 fw-bold">Emma Wilson</h6>
+                            <small class="text-muted">emma@example.com</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="person-item p-3 mb-3 d-flex align-items-center justify-content-between bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="mb-0 fw-bold">David Miller</h6>
+                            <small class="text-muted">david@example.com</small>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-lg-8">
+
+            <div class="details-panel p-4">
+
+                <!-- Top -->
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
+
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted" style="width:80px;height:80px;">
+                            <i class="fa-solid fa-user fa-2x"></i>
+                        </div>
+
+                        <div>
+                            <h2 class="fw-bold mb-1">John Smith</h2>
+                            <p class="text-muted mb-2">Senior Account Holder</p>
+
+                            <span class="badge bg-success badge-status">
+                                Active Account
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 mt-md-0">
+                        <div class="dropdown ms-auto">
+                            <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                                <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
+                                <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Person Details (Bootstrap rows) -->
+                <div class="mb-4">
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Full Name</div>
+                        <div class="col fw-semibold">Sandile Nkosi</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">ID Number</div>
+                        <div class="col fw-semibold">960000000000</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Email</div>
+                        <div class="col fw-semibold">john@example.com</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Phone</div>
+                        <div class="col fw-semibold">+27 71 234 5678</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Account Number</div>
+                        <div class="col fw-semibold">ACC-2026-001</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Available Balance</div>
+                        <div class="col fw-semibold text-success">R 24,500.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

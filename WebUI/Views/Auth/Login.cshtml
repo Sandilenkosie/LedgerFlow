@@ -1,0 +1,64 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+@model Application.ViewModels.LoginViewModel
+
+<section class="py-5 d-flex align-items-center min-vh-100">
+    <div class="container">
+        <div class="justify-content-center align-items-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-3">Sign in</h4>
+
+                        <form asp-controller="Auth" asp-action="Login" method="post" class="" novalidate>
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label asp-for="Username" class="form-label"></label>
+                                <input asp-for="Username" class="form-control" autocomplete="username" />
+                                <span asp-validation-for="Username" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="PasswordHash" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="PasswordHash" type="password" class="form-control" autocomplete="current-password" />
+                                    <button type="button" class="btn btn-outline-secondary" id="togglePassword" aria-label="Show password" onclick="togglePassword()">Show</button>
+                                </div>
+                                <span asp-validation-for="PasswordHash" class="text-danger small"></span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="RememberMe" name="RememberMe" />
+                                    <label class="form-check-label" for="RememberMe">Remember me</label>
+                                </div>
+                                <a href="/Auth/ForgotPassword">Forgot?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Sign in</button>
+
+                            <p class="text-center text-muted mb-0">Don't have an account? <a href="/Auth/Register">Create one</a></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function togglePassword()
+    {
+        var p = document.querySelector('[name="PasswordHash"]');
+        var btn = document.getElementById('togglePassword');
+        if (!p) return;
+        if (p.getAttribute('type') === 'password') { p.setAttribute('type','text'); btn.textContent = 'Hide'; btn.setAttribute('aria-pressed','true'); }
+        else { p.setAttribute('type','password'); btn.textContent = 'Show'; btn.setAttribute('aria-pressed','false'); }
+    }
+</script>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

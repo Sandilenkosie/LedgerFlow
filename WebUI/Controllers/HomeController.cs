@@ -1,26 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Collections.Generic;
+using System.Diagnostics;
+using WebUI.Models;
 
-namespace WebUI.Controllers;
-
-public class HomeController : Controller
+namespace WebUI.Controllers
 {
-    private readonly IHttpClientFactory _http;
-    public HomeController(IHttpClientFactory http) => _http = http;
-
-    public async Task<IActionResult> Index()
+    public class HomeController : Controller
     {
-        var client = _http.CreateClient("api");
-        List<object>? persons = null;
-        try
+        public IActionResult Index()
         {
-            persons = await client.GetFromJsonAsync<List<object>>("/api/Persons");
+            return View();
         }
-        catch { /* ignore errors for demo */ }
 
-        ViewData["Persons"] = persons;
-        return View();
+        public IActionResult About()
+        {
+            return View();
+        }
+        public IActionResult Contact()
+        {
+            return View();
+        }
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
     }
 }

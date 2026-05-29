@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Application;
 using Infrastructure;
 

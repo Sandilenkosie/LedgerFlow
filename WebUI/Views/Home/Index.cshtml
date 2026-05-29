@@ -1,25 +1,78 @@
-@{
-    ViewData["Title"] = "Home";
+﻿@{
+    ViewData["Title"] = "Home Page";
 }
 
-<h1>Welcome to LedgerFlow WebUI</h1>
-<p>This is a minimal scaffold. Use the Auth pages to register/login.</p>
+<section class="vh-100 d-flex align-items-center pt-5">
+<div class="container mt-8">
 
-@{
-    var persons = ViewData["Persons"] as List<object>;
-}
+    <div class="row align-items-center">
+        <!-- LEFT CONTENT -->
+        <div class="col-lg-6 text-center text-lg-start">
 
-@if (persons != null && persons.Count > 0)
-{
-    <h3>Persons (from API)</h3>
-    <ul>
-    @foreach (var p in persons)
-    {
-        <li>@p</li>
-    }
-    </ul>
-}
-else
-{
-    <p>No persons returned from API.</p>
-}
+            <span class="badge bg-dark px-3 py-2 mb-3">
+                Web Management System
+            </span>
+
+            <h1 class="display-4 fw-bold mb-3">
+                Manage Persons, Accounts & Transactions
+            </h1>
+
+            <p class="lead text-muted mb-4">
+                A secure web application for managing people, linking multiple accounts, and tracking financial transactions with full validation and business rules.
+            </p>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                <a href="/Login" class="btn btn-dark btn-lg px-4">
+                    Login
+                    <i class="fa-solid fa-arrow-right ms-2"></i>
+                </a>
+
+                <a href="@Url.Action("All", "Person")" class="btn btn-outline-dark btn-lg px-4">
+                    View People
+                </a>
+            </div>
+
+            <!-- Features -->
+            <div class="mt-4 d-flex gap-4 justify-content-center justify-content-lg-start text-muted">
+                <small>✔ Secure Login</small>
+                <small>✔ Account Linking</small>
+                <small>✔ Transaction Logs</small>
+            </div>
+
+        </div>
+
+        <!-- RIGHT IMAGE -->
+        <div class="col-lg-6 text-center mt-5 mt-lg-0">
+
+            <div class="position-relative">
+
+                <img src="assets/img/services/hero.png"
+                        class="img-fluid rounded-4 shadow"
+                        alt="System Dashboard">
+
+                <!-- Bootstrap floating cards -->
+                <div class="card shadow-sm position-absolute top-0 end-0 m-3">
+                    <div class="card-body py-2 px-3">
+                        <h6 class="mb-0 fw-bold">Persons</h6>
+                        <small class="text-muted">Manage users</small>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm position-absolute bottom-0 start-0 m-3">
+                    <div class="card-body py-2 px-3">
+                        <h6 class="mb-0 fw-bold">Transactions</h6>
+                        <small class="text-muted">Track activity</small>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+</section>
+
+        

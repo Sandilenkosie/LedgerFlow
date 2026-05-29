@@ -1,0 +1,382 @@
+:root {
+    --bg: #f6f8fb;
+    --muted: #212529;
+    --accent: #212529;
+    --primary: #212529;
+    --primary-contrast: #ffffff;
+    --primary-subtle: rgba(33,37,41,0.06);
+    --primary-hover: rgba(33,37,41,0.9);
+    --success: #198754;
+    --danger: #dc3545;
+    --muted-2: rgba(11,18,32,0.45);
+    --card-bg: #ffffff;
+    --glass: rgba(255,255,255,0.7);
+    --shadow-1: 0 6px 20px rgba(11,18,32,0.06);
+}
+
+html, body {
+    height: 100%;
+}
+
+html {
+    font-size: 14px
+}
+
+body {
+    font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    background: linear-gradient(180deg,var(--bg) 0%, #eef3f9 100%);
+    color: #0b1220;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Topnav */
+.topbar {
+    background: transparent;
+    border-bottom: 0;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+.brand {
+    font-weight: 700;
+    color: #0b1220
+}
+
+.search-input {
+    min-width: 240px;
+    max-width: 420px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(15,23,36,0.06);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-1)
+}
+
+/* Sidebar (shared) */
+.sidebar {
+    width: 240px;
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    bottom: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 14px 12px;
+    box-shadow: 0 18px 40px rgba(11,18,32,0.08);
+    display: flex;
+    flex-direction: column;
+    transition: transform .28s ease
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 6px;
+    margin-bottom: 6px
+}
+
+.sidebar .logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,var(--primary), var(--primary-hover));
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700
+}
+
+.sidebar .title {
+    font-weight: 700
+}
+
+.sidebar .subtitle {
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.sidebar-nav {
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-top: 8px
+}
+
+    .sidebar-nav::-webkit-scrollbar {
+        width: 8px
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: rgba(11,18,32,0.06);
+        border-radius: 10px
+    }
+
+.sidebar .nav-link {
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all .16s ease;
+    font-weight: 500
+}
+
+    .sidebar .nav-link i {
+        font-size: 16px;
+        min-width: 26px;
+        text-align: center;
+        color: rgba(11,18,32,0.45)
+    }
+
+    .sidebar .nav-link:hover {
+        background: var(--primary-subtle);
+        color: var(--primary);
+        transform: translateY(-2px)
+    }
+
+    .sidebar .nav-link.active {
+        background: transparent;
+        color: var(--primary);
+        font-weight: 700;
+        position: relative
+    }
+
+        .sidebar .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 8px;
+            width: 4px;
+            background: linear-gradient(180deg,var(--primary), var(--primary-hover));
+            border-radius: 6px
+        }
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(11,18,32,0.04);
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+    .sidebar-footer .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(33,37,41,0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 0.9rem
+    }
+
+/* Layout */
+.main {
+    margin-left: 280px;
+    padding: 22px 28px;
+    transition: margin .24s ease
+}
+
+.content-card {
+    background: linear-gradient(180deg,var(--glass),#fff);
+    border-radius: 12px;
+    padding: 22px;
+    border: 1px solid rgba(11,18,32,0.04);
+    box-shadow: var(--shadow-1)
+}
+
+/* People / Profile components used by Views/Person/All.cshtml */
+.sidebar-card {
+    height: 85vh;
+    overflow-y: auto;
+    border: none;
+    border-radius: 16px;
+    background: var(--card-bg);
+    padding: 16px;
+    box-shadow: var(--shadow-1);
+}
+
+.details-card {
+    height: 85vh;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(180deg,var(--glass),#fff);
+}
+
+.person-item {
+    transition: all 0.22s ease;
+    border-radius: 12px;
+    cursor: pointer;
+    background: transparent;
+    padding: 12px;
+}
+
+.person-item:hover {
+    background: var(--primary-subtle);
+    transform: translateY(-2px);
+}
+
+.person-item.active {
+    background: linear-gradient(180deg,var(--primary), var(--primary-hover));
+    color: var(--primary-contrast);
+}
+
+.avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(11,18,32,0.04);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid rgba(233,236,239,0.8);
+}
+
+.info-box {
+    background: linear-gradient(180deg, rgba(255,255,255,0.9), var(--card-bg));
+    border-radius: 12px;
+    padding: 18px;
+    height: 100%;
+    border: 1px solid rgba(11,18,32,0.04);
+}
+
+.transaction-box {
+    border-radius: 12px;
+    background: var(--card-bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.transaction-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(11,18,32,0.06);
+}
+
+.badge-status {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(25,135,84,0.12);
+    color: var(--success);
+}
+
+.bg-success-subtle { background: rgba(25,135,84,0.08); }
+.bg-danger-subtle { background: rgba(220,53,69,0.06); }
+.bg-primary-subtle { background: var(--primary-subtle); }
+
+/* Bootstrap button overrides to match site variables */
+.btn-primary {
+    background-color: var(--primary) !important;
+    color: var(--primary-contrast) !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--primary-hover) !important;
+    color: var(--primary-contrast) !important;
+}
+
+.btn-primary:active,
+.btn-primary.active {
+    background: linear-gradient(180deg,var(--primary-hover), var(--primary)) !important;
+    color: var(--primary-contrast) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary) !important;
+    border-color: rgba(33,37,41,0.12) !important;
+    background: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-subtle) !important;
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+
+/* Utility mappings to use theme variables */
+.text-primary { color: var(--primary) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-muted { color: rgba(11,18,32,0.45) !important; }
+
+/* Person item white background normalized */
+.person-item.bg-white { background: var(--card-bg); }
+
+.person-item.active .avatar {
+    box-shadow: 0 8px 22px rgba(33,37,41,0.18);
+    border-color: transparent;
+}
+
+.person-item.active i { color: var(--primary-contrast); }
+
+/* ensure subtle rounded icons in transactions use theme colors */
+.bg-success-subtle { background: rgba(25,135,84,0.08); }
+.bg-danger-subtle { background: rgba(220,53,69,0.06); }
+
+
+/* Responsive */
+@@media (max-width: 1100px) {
+    .sidebar {
+        transform: translateX(-8px)
+    }
+
+    .main {
+        margin-left: 260px;
+        padding: 20px
+    }
+
+    .search-input {
+        min-width: 200px
+    }
+}
+
+@@media (max-width: 860px) {
+    .sidebar {
+        transform: translateX(-120%);
+        position: fixed;
+        z-index: 1050
+    }
+
+        .sidebar.open {
+            transform: translateX(0)
+        }
+
+    .main {
+        margin-left: 20px;
+        padding: 16px
+    }
+
+    .search-input {
+        display: none
+    }
+
+    .mobile-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2,6,23,0.45);
+        z-index: 1040;
+        display: none
+    }
+
+        .mobile-overlay.show {
+            display: block
+        }
+}

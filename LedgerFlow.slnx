@@ -3,5 +3,5 @@
   <Project Path="Domain/Domain.csproj" Id="8ecaaaa6-7fe6-4d73-9ed8-d03622166ce6" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="Tests/Tests.csproj" />
-  <Project Path="WebUI/WebUI.csproj" />
+  <Project Path="WebUI/WebUI.csproj" Id="3c3b3a2f-f583-4f9c-9c7b-15ca7af81567" />
 </Solution>
