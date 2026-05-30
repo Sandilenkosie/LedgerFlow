@@ -24,8 +24,20 @@ public class Transaction
         Description = description ?? string.Empty;
     }
 
-    public Transaction(Guid accountId, decimal amount, string description) : this(amount, DateTime.UtcNow, description)
+    public Transaction(Guid accountId, decimal amount, DateTime transactionDate, string description) : this(amount, transactionDate, description)
     {
         AccountId = accountId;
+    }
+
+    // Update an existing transaction's key values. This refreshes the CaptureDate to now.
+    public void Update(decimal amount, DateTime transactionDate, string description)
+    {
+        if (transactionDate > DateTime.UtcNow)
+            throw new InvalidOperationException("Transaction date cannot be in the future.");
+
+        Amount = amount;
+        TransactionDate = transactionDate;
+        Description = description ?? string.Empty;
+        CaptureDate = DateTime.UtcNow;
     }
 }

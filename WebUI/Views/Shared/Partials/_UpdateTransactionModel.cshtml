@@ -1,11 +1,11 @@
-﻿<!-- Add Transaction Modal -->
-<div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+﻿<!-- Update Transaction Modal -->
+<div class="modal fade" id="updateTransactionModal" tabindex="-1" aria-labelledby="updateTransactionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="add-transaction-form" asp-action="MakeTransaction" asp-controller="Person" method="post">
+            <form id="update-transaction-form" asp-action="UpdateTransaction" asp-controller="Person" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addTransactionModalLabel">Add Transaction</h5>
+                    <h5 class="modal-title" id="updateTransactionModalLabel">Update Transaction</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -30,9 +30,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                    <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Transaction</button>
+                    <button type="submit" class="btn btn-primary">Update Transaction</button>
                 </div>
             </form>
         </div>

@@ -29,6 +29,9 @@ namespace Application.ViewModels
         public Guid Id { get; set; }
         public string AccountNumber { get; set; } = null!;
         public bool IsClosed { get; set; }
+        public string AccountType { get; set; }
+        public DateTime Created { get; set; }
+        public string OwnerName { get; set; }
         public IEnumerable<RelatedTransactionsViewModel> Transactions { get; set; } = new List<RelatedTransactionsViewModel>();
 
     }
@@ -39,8 +42,8 @@ namespace Application.ViewModels
         [Required(ErrorMessage = "Amount is required")]
         public decimal Amount { get; set; }
         public string Description { get; set; } = null!;
-        
+
         public Guid AccountId { get; set; }
-        public Account Account { get; set; }
+        public DateTime TransactionDate { get; set; }
     }
 }

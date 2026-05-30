@@ -71,7 +71,7 @@
 
             // populate fields
             $('#person-name').text(name || '');
-            $('#person-username').text(username || '');
+            $('#person-username-text').text(username || '');
             $('#detail-fullname').text(name || '');
             $('#detail-idnumber').text(idnumber || '');
             $('#detail-email').text(email || '');
@@ -133,9 +133,33 @@
             $('#account-id').val(id);
 
             // clear/reset transaction fields
+            $('#transaction-id').val('');
             $('#transaction-amount').val('');
-            $('#transaction-date').val('');
+            // default date to today (local date string in yyyy-mm-dd)
+            try {
+                var today = new Date();
+                var yyyy = today.getFullYear();
+                var mm = String(today.getMonth() + 1).padStart(2, '0');
+                var dd = String(today.getDate()).padStart(2, '0');
+                $('#transaction-date').val(yyyy + '-' + mm + '-' + dd);
+            } catch (ex) { $('#transaction-date').val(''); }
 
+            var modalEl = document.getElementById('addTransactionModal');
+            showModalElement(modalEl);
+        };
+
+        // Open Edit Transaction modal prefilled with data
+        window.openEditTransactionModal = function(tx) {
+            if (!tx) return;
+            $('#transaction-id').val(tx.Id || tx.id || '');
+            $('#account-id').val(tx.AccountId || tx.accountId || '');
+            $('#transaction-amount').val(tx.Amount || tx.amount || '');
+            // normalize date to yyyy-mm-dd
+            var d = tx.TransactionDate || tx.transactionDate || tx.Date || tx.date || '';
+            if (d) {
+                try { var dt = new Date(d); var yyyy = dt.getFullYear(); var mm = String(dt.getMonth()+1).padStart(2,'0'); var dd = String(dt.getDate()).padStart(2,'0'); $('#transaction-date').val(yyyy + '-' + mm + '-' + dd); } catch (ex) { $('#transaction-date').val(d); }
+            }
+            $('#transaction-Description').val(tx.Description || tx.description || '');
             var modalEl = document.getElementById('addTransactionModal');
             showModalElement(modalEl);
         };
@@ -147,5 +171,65 @@
             var userId = $btn.data('accountid') || $btn.attr('data-accountid') || '';
             window.openAddTransactionModal({ Id: userId });
         });
+
+        // Helper to open the update modal for the currently selected person
+        window.openUpdatePersonModalFromCurrent = function() {
+            var $selected = $('.person-item.active');
+            if (!$selected || !$selected.length) return;
+
+            // Build person object from data attributes (support PascalCase too)
+            var person = {
+                id: $selected.data('id') || $selected.attr('data-id'),
+                name: $selected.data('name') || $selected.attr('data-name'),
+                fullName: $selected.data('name') || $selected.attr('data-name'),
+                username: $selected.data('username') || $selected.attr('data-username'),
+                idNumber: $selected.data('idnumber') || $selected.attr('data-idnumber') || '',
+                email: $selected.data('email') || $selected.attr('data-email') || '',
+                phone: $selected.data('phone') || $selected.attr('data-phone') || ''
+            };
+
+            if (window.openUpdatePersonModal) {
+                window.openUpdatePersonModal(person);
+            } else {
+                console.warn('openUpdatePersonModal is not defined');
+            }
+        };
+
+        // Helper to delete the currently selected person via AJAX POST
+        window.deleteCurrentPerson = function() {
+            var $selected = $('.person-item.active');
+            if (!$selected || !$selected.length) return;
+            var id = $selected.data('id') || $selected.attr('data-id');
+            if (!id) return;
+
+            if (!confirm('Are you sure you want to remove this person? This cannot be undone.')) return;
+
+            // get the antiforgery token from the page
+            var token = $('input[name="__RequestVerificationToken"]').first().val();
+
+            $.post({
+                url: '/Person/DeletePerson',
+                data: { id: id, __RequestVerificationToken: token },
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        // remove from list and clear details
+                        $selected.remove();
+                        $('#person-name').text('');
+                        $('#person-username-text').text('');
+                        $('#detail-fullname').text('');
+                        $('#detail-idnumber').text('');
+                        $('#detail-email').text('');
+                        $('#detail-phone').text('');
+                        $('#no-selection').removeClass('d-none');
+                        $('#person-details').addClass('d-none');
+                    } else {
+                        alert('Failed to remove person');
+                    }
+                },
+                error: function() {
+                    alert('Failed to remove person');
+                }
+            });
+        };
     });
 })(jQuery);

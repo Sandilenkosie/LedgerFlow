@@ -429,6 +429,27 @@ body {
 .bg-success-subtle { background: rgba(25,135,84,0.08); }
 .bg-danger-subtle { background: rgba(220,53,69,0.06); }
 
+/* Active transaction/person-item overrides (append last to win cascade) */
+.transaction-box.active {
+    background: var(--primary-subtle);
+    border: 1px solid rgba(33,37,41,0.16);
+    box-shadow: 0 10px 30px rgba(11,18,32,0.08);
+}
+
+.person-item.active {
+    background: var(--primary-subtle) !important;
+}
+
+.person-item.active h6,
+.person-item.active small,
+.person-item.active .text-muted {
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
+
+.person-item.active i {
+    color: #212529 !important;
+}
 
 /* Responsive */
 @@media (max-width: 1100px) {
@@ -477,4 +498,17 @@ body {
         .mobile-overlay.show {
             display: block
         }
+}
+
+/* Active transaction: make left-side text dark and bold */
+.person-item.active h6,
+.person-item.active .fw-bold {
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
+
+.person-item.active small,
+.person-item.active .text-muted {
+    color: #495057 !important;
+    font-weight: 600 !important;
 }

@@ -13,8 +13,10 @@ namespace Application.ViewModels
         public string AccountNumber { get; set; } = null!;
         public decimal Balance { get; set; }
         public bool IsClosed { get; set; }
-        public string Description { get; set; }
+        public string AccountType { get; set; } = null!;
+        public DateTime Created { get; set; }
         public Guid PersonId { get; set; }
         public User Person { get; set; }
+        public IEnumerable<RelatedTransactionsViewModel> Transactions { get; set; } = new List<RelatedTransactionsViewModel>();
     }
 }

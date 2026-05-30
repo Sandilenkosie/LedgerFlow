@@ -1,5 +1,11 @@
 ﻿using Application.ViewModels;
 using MediatR;
+using System;
 
-public record CreateTransactionCommand(Guid AccountId, decimal Amount, string Description) : IRequest<TransactionViewModel>;
+namespace Application.Commands
+{
+    public record CreateTransactionCommand(Guid AccountId, decimal Amount, DateTime TransactionDate, string Description) : IRequest<TransactionViewModel>;
+
+    public record UpdateTransactionCommand(Guid Id, Guid AccountId, decimal Amount, DateTime TransactionDate, string Description) : IRequest<TransactionViewModel>;
+}
 

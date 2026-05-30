@@ -15,10 +15,18 @@ public class AccountRepository : IAccountRepository
     }
 
     public async Task<Account?> GetByIdAsync(Guid id) =>
-        await _context.Accounts.Include(a => a.Transactions).FirstOrDefaultAsync(a => a.Id == id);
+        await _context.Accounts
+            .Include(a => a.Transactions)
+            .Include(a => a.Person)
+            .Include(a => a.Status)
+            .FirstOrDefaultAsync(a => a.Id == id);
 
     public async Task<IEnumerable<Account>> GetAllAsync() =>
-        await _context.Accounts.Include(a => a.Transactions).ToListAsync();
+        await _context.Accounts
+            .Include(a => a.Transactions)
+            .Include(a => a.Person)
+            .Include(a => a.Status)
+            .ToListAsync();
 
     public async Task AddAsync(Account account)
     {
@@ -65,5 +73,16 @@ public class AccountRepository : IAccountRepository
             _context.Accounts.Update(account);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<Transaction?> GetTransactionByIdAsync(Guid id)
+    {
+        return await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task UpdateTransactionAsync(Transaction transaction)
+    {
+        _context.Transactions.Update(transaction);
+        await _context.SaveChangesAsync();
     }
 }

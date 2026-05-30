@@ -2,7 +2,8 @@
 <div class="modal fade" id="updatePersonModal" tabindex="-1" aria-labelledby="updatePersonModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form asp-action="Update" asp-controller="Person" method="post">
+            <form asp-action="UpdatePerson" asp-controller="Person" method="post">
+                @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title" id="updatePersonModalLabel">Update Person</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -11,9 +12,15 @@
                 <div class="modal-body">
                     <input type="hidden" name="Id" id="person-id" />
 
+
                     <div class="mb-3">
                         <label for="person-fullname" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="person-fullname" name="FullName" required />
+                        <input type="text" class="form-control" id="person-fullname" name="Name" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="person-username-input" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="person-username-input" name="Username" required />
                     </div>
 
                     <div class="mb-3">
@@ -21,15 +28,6 @@
                         <input type="text" class="form-control" id="person-idnumber" name="IdNumber" />
                     </div>
 
-                    <div class="mb-3">
-                        <label for="person-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="person-email" name="Email" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="person-phone" class="form-label">Phone</label>
-                        <input type="tel" class="form-control" id="person-phone" name="Phone" />
-                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -44,14 +42,32 @@
 @* Helper script: call openUpdatePersonModal(person) with an object to populate and show modal *@
 <script>
     function openUpdatePersonModal(person) {
-        // person: { id, fullName, idNumber, email, phone }
-        document.getElementById('person-id').value = person?.id ?? person?.Id ?? '';
-        document.getElementById('person-fullname').value = person?.fullName ?? person?.FullName ?? '';
-        document.getElementById('person-idnumber').value = person?.idNumber ?? person?.IdNumber ?? '';
-        document.getElementById('person-email').value = person?.email ?? person?.Email ?? '';
-        document.getElementById('person-phone').value = person?.phone ?? person?.Phone ?? '';
+        // person: { id, name, username, idNumber }
+        function setValueIfExists(id, value) {
+            var el = document.getElementById(id);
+            if (!el) {
+                console.warn('Element not found for id:', id);
+                return;
+            }
+            try {
+                el.value = value ?? '';
+            } catch (e) {
+                // some elements might not support .value
+                el.textContent = value ?? '';
+            }
+        }
+
+        setValueIfExists('person-id', person?.id ?? person?.Id ?? '');
+        setValueIfExists('person-fullname', person?.name ?? person?.Name ?? person?.fullName ?? person?.FullName ?? '');
+        setValueIfExists('person-username-input', person?.username ?? person?.Username ?? '');
+        setValueIfExists('person-idnumber', person?.idNumber ?? person?.IdNumber ?? '');
 
         var modalEl = document.getElementById('updatePersonModal');
+        if (!modalEl) {
+            console.warn('updatePersonModal element not found');
+            return;
+        }
+
         if (typeof showModalElement === 'function') {
             showModalElement(modalEl);
         } else {

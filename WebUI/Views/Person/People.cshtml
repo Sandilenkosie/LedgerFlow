@@ -7,6 +7,7 @@
 }
 
 <div class=" py-0">
+    @Html.AntiForgeryToken()
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center">
@@ -46,9 +47,10 @@
                         role="button"
                         data-id="@person.Id"
                         data-name="@person.Name"
+                        data-idnumber="@person.IdNumber"
                         data-username="@person.Username"
-                        data-accounts='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts))'
-                        data-transactions='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts.SelectMany(a => a.Transactions)))'
+                        data-accounts='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts.Select(a => new { Id = a.Id, AccountNumber = a.AccountNumber, IsClosed = a.IsClosed, AccountType = a.AccountType, Created = a.Created, OwnerName = person.Name })))'
+                        data-transactions='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts.SelectMany(a => a.Transactions).Select(t => new { Id = t.Id, Amount = t.Amount, Description = t.Description, AccountId = t.AccountId })))'
                         class="person-item list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 px-3 rounded-lg mb-2 shadow-sm"
                         style="cursor:pointer;">
 
@@ -99,7 +101,7 @@
 
                             <div>
                                 <h2 id="person-name" class="fw-bold mb-1"></h2>
-                                <p id="person-username" class="text-muted mb-2"></p>
+                                <p id="person-username-text" class="text-muted mb-2"></p>
 
                                 <span id="badge-status" class="badge bg-success badge-status">
                                     Active Account
@@ -116,11 +118,15 @@
                                     <li>
                                         <a class="dropdown-item"
                                         href="#"
-                                        onclick='openUpdatePersonModal()'>
+                                        onclick='openUpdatePersonModalFromCurrent()'>
                                             <i class="fa-solid fa-pen me-2"></i>Edit
                                         </a>
                                     </li>
-                                    <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                                    <li>
+                                        <button class="dropdown-item text-danger" type="button" onclick="deleteCurrentPerson()">
+                                            <i class="fa-solid fa-trash me-2"></i>Remove
+                                        </button>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -136,7 +142,7 @@
 
                         <div class="row py-1 align-items-center">
                             <div class="col-auto col-sm-3 text-muted">ID Number</div>
-                            <div id="detail-idnumber" class="col fw-semibold">&nbsp;</div>
+                            <div id="detail-idnumber" class="col fw-semibold" aria-live="polite"></div>
                         </div>
                     </div>
 

@@ -11,4 +11,6 @@ public interface IAccountRepository
     Task UpdateAsync(Account account);
     Task CloseAsync(Guid id);
     Task<string> GetNextAccountNumberAsync();
+    Task<Transaction?> GetTransactionByIdAsync(Guid id);
+    Task UpdateTransactionAsync(Transaction transaction);
 }

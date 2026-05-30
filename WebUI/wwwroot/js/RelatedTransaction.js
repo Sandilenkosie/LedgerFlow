@@ -20,7 +20,7 @@
                 txs.forEach(function(t){
                     var id = t.id || t.Id || '';
                     var title = t.title || t.Title || t.description || t.Description || 'Transaction';
-                    var date = t.date || t.Date || '';
+                    var date = t.date || t.Date || t.TransactionDate || t.TransactionDate || '';
                     var amount = t.amount || t.Amount || 0;
 
                     var displayDate = date ? (new Date(date)).toLocaleDateString() : '';
@@ -29,8 +29,9 @@
                     var amountText = (isPositive ? '+ ' : '- ') + 'R ' + Math.abs(Number(amount || 0)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
                     var amountClass = isPositive ? 'text-success' : 'text-danger';
 
-                    var $a = $("<a>")
-                        .attr('href', '/Transaction/Details/' + id)
+                    // Create a clickable anchor that redirects to the transaction details page
+                    var $a = $('<a>')
+                        .attr('href', '/person/transactions/' + id)
                         .addClass('list-group-item list-group-item-action d-flex justify-content-between align-items-start')
                         .append(
                             $('<div>').append(

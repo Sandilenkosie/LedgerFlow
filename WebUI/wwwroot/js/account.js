@@ -21,16 +21,23 @@
 
             // populate right-side fields
             $('#account-number-title').text(account.accountNumber || account.AccountNumber || '');
-            var ownerText = (account.isClosed ? 'Closed' : 'Active') + ' • ' + ((account.person && (account.person.name || account.person.Name)) || '');
+            var ownerName = account.ownerName || account.OwnerName || ((account.person && (account.person.name || account.person.Name)) || '');
+            var ownerText = (account.isClosed ? 'Closed' : 'Active') + ' • ' + ownerName;
             $('#account-owner').text(ownerText);
             $('#account-status-badge').removeClass('bg-success bg-secondary bg-danger');
             $('#account-status-badge').addClass(account.isClosed ? 'bg-secondary' : 'bg-success');
 
             $('#detail-account-number').text(account.accountNumber || account.AccountNumber || '');
-            $('#detail-account-description').text(account.description || account.Description || '');
-            $('#detail-account-owner').text((account.person && (account.person.name || account.person.Name)) || '');
-            $('#detail-account-balance').text('R ' + ((account.balance !== undefined) ? Number(account.balance).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '0.00'));
-            $('#detail-account-created').text(account.createdAt || account.created || account.CreatedAt || '');
+            $('#detail-account-description').text(account.accountType || account.AccountType || account.description || account.Description || '');
+            $('#detail-account-owner').text(ownerName || '');
+            var balVal = (account.balance !== undefined) ? account.balance : ((account.Balance !== undefined) ? account.Balance : 0);
+            $('#detail-account-balance').text('R ' + Number(balVal).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+            var createdVal = account.createdAt || account.created || account.CreatedAt || account.Created || account.createdAt || account.CreatedAt || '';
+            var createdText = '';
+            if (createdVal) {
+                try { createdText = (new Date(createdVal)).toLocaleString(); } catch (ex) { createdText = String(createdVal); }
+            }
+            $('#detail-account-created').text(createdText);
 
             // set Make Transaction link and hidden input for modal
             // keep Make Transaction link as a modal trigger (href '#') and set hidden account id for the form
