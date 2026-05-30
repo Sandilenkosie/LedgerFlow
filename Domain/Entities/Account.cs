@@ -2,11 +2,15 @@
 
 public class Account
 {
+    // EF Core requires a parameterless constructor for materialization
+    protected Account() { }
+
     public Guid Id { get; private set; }
     public string AccountNumber { get; private set; }
     public decimal Balance { get; private set; }
     public bool IsClosed { get; private set; }
     public Guid UserId { get; private set; }
+    public User Person { get; private set; }
 
     private readonly List<Transaction> _transactions = new();
 
@@ -17,6 +21,18 @@ public class Account
         AccountNumber = accountNumber;
         Balance = 0;
         IsClosed = false;
+    }
+
+    public Account(Guid userId, string accountNumber, decimal initialBalance) : this(accountNumber)
+    {
+        UserId = userId;
+        if (initialBalance < 0) throw new ArgumentException("Initial balance cannot be negative.");
+        Balance = initialBalance;
+    }
+
+    public Account(Guid userId, string accountNumber) : this(accountNumber)
+    {
+        UserId = userId;
     }
 
     public void AddTransaction(Transaction transaction)

@@ -30,7 +30,6 @@
                 <img class="img-fluid position-absolute end-0" src="@Url.Content("~/assets/img/hero/hero-bg.png")" alt="" />
             </div>
             <main class="main" id="top">
-
                 @RenderBody()
             </main>
             @* Server-side notifications will be shown via Toastr *@
@@ -50,10 +49,10 @@
         <script src="assets/js/theme.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
         <script>
-            // expose server toast data to client script
+            // expose server toast data to client script (prefer TempData so redirects work)
             window.__serverToastr = {
-                msg: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewData["ToastMessage"] ?? null)),
-                type: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewData["ToastType"] ?? "info"))
+                msg: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ToastMessage"] ?? ViewData["ToastMessage"] ?? null)),
+                type: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ToastType"] ?? ViewData["ToastType"] ?? "info"))
             };
         </script>
         <script src="/assets/js/toastr-init.js"></script>

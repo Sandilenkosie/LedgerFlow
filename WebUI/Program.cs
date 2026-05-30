@@ -36,7 +36,8 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? string.Empty)),
-            NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub
+            // Map Name to the standard ClaimTypes.Name so User.Identity.Name is filled from the Name claim emitted by JwtService.
+            NameClaimType = System.Security.Claims.ClaimTypes.Name
         };
     });
 

@@ -1,0 +1,176 @@
+﻿@using Application.ViewModels
+@model IEnumerable<Application.ViewModels.PersonViewModel>
+
+@{
+    ViewData["Title"] = "All People";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class=" py-0">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-0">People Management</h2>
+            <p class="text-muted mb-0">Manage persons, accounts and transactions</p>
+        </div>
+
+        <button class="btn btn-primary px-4 py-2 rounded-pill">
+            <i class="fa-solid fa-plus me-2"></i>
+            Add Person
+        </button>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDE -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm sidebar-card p-3" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Search -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search people...">
+                    </div>
+                </div>
+
+                <!-- Person -->
+                <div class="list-group">
+                    @foreach (var person in Model)
+                    {
+                        <a href="#"
+                        role="button"
+                        data-id="@person.Id"
+                        data-name="@person.Name"
+                        data-username="@person.Username"
+                        data-accounts='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts))'
+                        data-transactions='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(person.Accounts.SelectMany(a => a.Transactions)))'
+                        class="person-item list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 px-3 rounded-lg mb-2 shadow-sm"
+                        style="cursor:pointer;">
+
+                            <div>
+                                <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold"
+                                style="width:48px;height:48px;">@(person.Name != null && person.Name.Length > 0 ? person.Name.Substring(0,1).ToUpper() : "")</div>
+                            </div>
+
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="d-flex flex-column">
+                                    <div class="fw-semibold text-truncate">@person.Name</div>
+                                    <small class="text-muted text-truncate">@person.Username</small>
+                                </div>
+                            </div>
+
+                            <div class="ms-2 text-muted d-none d-sm-flex align-items-center">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </div>
+
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-lg-8">
+
+            <div class="details-panel p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Placeholder when no person is selected -->
+                <div id="no-selection" class="text-center py-5">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center text-muted mx-auto" style="width:120px;height:120px;">
+                        <img src="@Url.Content("~/assets/img/files-svgrepo-com.svg")" alt="User" style="width:72px;height:72px;" />
+                    </div>
+                    <p class="text-muted mt-3">No selected person</p>
+                </div>
+
+                <!-- Person details (hidden until a person is selected) -->
+                <div id="person-details" class="d-none">
+                    <!-- Top -->
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
+
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="rounded-3 bg-light d-flex align-items-center justify-content-center text-muted" style="width:80px;height:80px;">
+                                <img src="@Url.Content("~/assets/img/files-svgrepo-com.svg")" alt="User" style="width:40px;height:40px;" />
+                            </div>
+
+                            <div>
+                                <h2 id="person-name" class="fw-bold mb-1"></h2>
+                                <p id="person-username" class="text-muted mb-2"></p>
+
+                                <span id="badge-status" class="badge bg-success badge-status">
+                                    Active Account
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 mt-md-0">
+                            <div class="dropdown ms-auto">
+                                <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                                    <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item"
+                                        href="#"
+                                        onclick='openUpdatePersonModal()'>
+                                            <i class="fa-solid fa-pen me-2"></i>Edit
+                                        </a>
+                                    </li>
+                                    <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    @await Html.PartialAsync("partials/_UpdatePersonModal")
+
+                    <!-- Person Details (Bootstrap rows) -->
+                    <div class="mb-4">
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Full Name</div>
+                            <div id="detail-fullname" class="col fw-semibold">&nbsp;</div>
+                        </div>
+
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">ID Number</div>
+                            <div id="detail-idnumber" class="col fw-semibold">&nbsp;</div>
+                        </div>
+                    </div>
+
+                    <!-- Related: Accounts & Transactions (list view) -->
+                    <div class="related-section mt-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0">Accounts</h5>
+                                    <a href='@Url.Action("Accounts","Person")' class="small">View all</a>
+                                </div>
+
+                                <ul id="accounts-list" class="list-group mb-3">
+                                </ul>
+
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0">Recent Transactions</h5>
+                                    <a href='@Url.Action("Transactions","Person")' class="small">View all</a>
+                                </div>
+
+                                <ul id="transactions-list" class="list-group">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+@section Scripts {
+    <script src="@Url.Content("~/js/RelatedAccount.js")"></script>
+    <script src="@Url.Content("~/js/RelatedTransaction.js")"></script>
+    <script src="@Url.Content("~/js/person.js")"></script>
+}

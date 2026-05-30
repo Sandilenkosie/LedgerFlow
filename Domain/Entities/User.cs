@@ -35,14 +35,14 @@ public class User
         PasswordHash = passwordHash;
     }
 
-    // Minimal constructor for registration when idNumber and name are not provided
-    public User(string username, string passwordHash)
+    // Minimal constructor for registration when idNumber are not provided
+    public User(string username, string name, string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(username))
             throw new ArgumentException("Username is required.");
 
         Username = username;
-        Name = username;
+        Name = name;
         IdNumber = null;
         PasswordHash = passwordHash;
     }
@@ -53,6 +53,17 @@ public class User
             throw new Exception("Username is required");
 
         Username = username;
+    }
+
+    public void UpdateIdNumber(string idNumber)
+    {
+        if (string.IsNullOrWhiteSpace(idNumber))
+            throw new Exception("ID Number is required");
+
+        if (idNumber.Length != 13 || !idNumber.All(char.IsDigit))
+            throw new Exception("ID Number must be 13 digits.");
+
+        IdNumber = idNumber;
     }
 
     public void AddAccount(Account account)

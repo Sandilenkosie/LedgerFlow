@@ -2,6 +2,7 @@
     --bg: #f6f8fb;
     --muted: #212529;
     --accent: #212529;
+    --accent-subtle: rgba(33,37,41,0.06);
     --primary: #212529;
     --primary-contrast: #ffffff;
     --primary-subtle: rgba(33,37,41,0.06);
@@ -12,6 +13,80 @@
     --card-bg: #ffffff;
     --glass: rgba(255,255,255,0.7);
     --shadow-1: 0 6px 20px rgba(11,18,32,0.06);
+}
+
+/* Global layout using design tokens */
+html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--muted);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cards and panels */
+.card, .sidebar-card, .details-panel {
+    background: var(--card-bg);
+    box-shadow: var(--shadow-1);
+    border: 1px solid rgba(11,18,32,0.04);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-contrast);
+    transition: transform .16s ease, background .12s ease, color .12s ease;
+}
+.btn-primary:hover, .btn-primary:focus {
+    /* match sidebar hover */
+    background: var(--primary-subtle);
+    color: var(--primary);
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+/* Badges */
+.badge-status, .badge.bg-success { background-color: var(--success); color: #fff; }
+.badge.bg-danger { background-color: var(--danger); color: #fff; }
+
+/* List group refinements */
+.list-group {
+    padding: 4px 0;
+}
+.list-group-item {
+    background: transparent;
+    border: none;
+}
+.list-group-item.list-group-item-action {
+    background: var(--card-bg);
+    border-radius: 0.6rem;
+    transition: box-shadow .15s ease, transform .08s ease;
+}
+.list-group-item.list-group-item-action:hover {
+    box-shadow: 0 8px 20px rgba(11,18,32,0.06);
+    transform: translateY(-2px);
+}
+.list-group-item .rounded-circle {
+    flex-shrink: 0;
+}
+
+/* Avatar initial */
+.rounded-circle.bg-primary {
+    background: var(--accent);
+    color: var(--primary-contrast) !important;
+}
+
+/* Muted text token */
+.text-muted { color: var(--muted-2) !important; }
+
+/* Utility tweaks */
+.fw-semibold { font-weight: 600; }
+.text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Small screens: tighter spacing */
+@media (max-width: 576px) {
+    .list-group-item.list-group-item-action { padding: .6rem .75rem; }
 }
 
 html, body {
@@ -222,14 +297,31 @@ body {
     padding: 12px;
 }
 
-.person-item:hover {
-    background: var(--primary-subtle);
-    transform: translateY(-2px);
-}
+    .person-item.active {
+        background: transparent;
+        color: var(--primary);
+    }
 
-.person-item.active {
-    background: linear-gradient(180deg,var(--primary), var(--primary-hover));
-    color: var(--primary-contrast);
+        /* Optional indicator bar (if you still want pseudo-element) */
+        .person-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            height: 60%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+            border-radius: 6px;
+        }
+
+    .person-item.active small,
+    .person-item.active h6 {
+        color: #fff;
+    }
+
+.person-item:hover {
+    background-color: var(--accent-subtle);
+    cursor: pointer;
 }
 
 .avatar {
@@ -289,14 +381,18 @@ body {
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background-color: var(--primary-hover) !important;
-    color: var(--primary-contrast) !important;
+    background: var(--primary-subtle) !important;
+    color: var(--primary) !important;
+    transform: translateY(-2px) !important;
 }
 
 .btn-primary:active,
 .btn-primary.active {
-    background: linear-gradient(180deg,var(--primary-hover), var(--primary)) !important;
-    color: var(--primary-contrast) !important;
+    /* match sidebar active */
+    background: transparent !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
 }
 
 .btn-outline-primary {
@@ -306,9 +402,11 @@ body {
 }
 
 .btn-outline-primary:hover {
+    /* match sidebar hover */
     background: var(--primary-subtle) !important;
     color: var(--primary) !important;
     border-color: var(--primary) !important;
+    transform: translateY(-2px);
 }
 
 /* Utility mappings to use theme variables */

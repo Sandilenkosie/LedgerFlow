@@ -1,0 +1,137 @@
+﻿@model IEnumerable<Application.ViewModels.TransactionViewModel>
+
+@{
+    ViewData["Title"] = "Transactions";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class=" py-0">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-0">Transactions Management</h2>
+            <p class="text-muted mb-0">Manage transactions and related accounts</p>
+        </div>
+
+        @* <button class="btn btn-primary px-4 py-2 rounded-pill"
+                data-toggle="modal" data-target="#addAccountModal"
+                data-userid="@userId">
+            <i class="fa-solid fa-plus me-2"></i>
+            Add Transaction
+        </button> *@
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDE -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm sidebar-card p-3" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Search -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search transactions...">
+                    </div>
+                </div>
+
+                <!-- Transactions list -->
+                @foreach(var transaction in Model)
+                {
+                    <a href='@Url.Action("Details", "Transaction", new { id = transaction.Id })' class="person-item active p-3 mb-3 d-flex align-items-center justify-content-between text-decoration-none">
+                        <div>
+                            <h6 class="mb-0 fw-bold">transaction.Description</h6>
+                            <small>@transaction.TransactionDate • @transaction.Account</small>
+                        </div>
+                        <div class="text-danger">- R @transaction.Amount</div>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-lg-8">
+
+            <div class="details-panel p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Top -->
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
+
+                    <div class="d-flex align-items-center gap-4">
+                        <div>
+                            <h2 class="fw-bold mb-1">Payment to Groceries</h2>
+                            <p class="text-muted mb-2">20 May 2026 • ACC-2026-001</p>
+
+                            <span class="badge bg-secondary badge-status">
+                                Completed
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 mt-md-0">
+                        <div class="dropdown ms-auto">
+                            <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                                <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href=@Url.Action("MakeTransaction", "Person", new { Id = "ACC-2026-001" }) ><i class="fa-solid fa-pen me-2"></i>Make Transaction</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
+                                <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Details (Bootstrap rows) -->
+                <div class="mb-4">
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Reference</div>
+                        <div class="col fw-semibold">TX-1001</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Date</div>
+                        <div class="col fw-semibold">20 May 2026</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Account</div>
+                        <div class="col fw-semibold">ACC-2026-001</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Amount</div>
+                        <div class="col fw-semibold text-danger">- R 1,250.00</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Status</div>
+                        <div class="col fw-semibold">Completed</div>
+                    </div>
+                </div>
+
+                <!-- Related: Account Summary & Recent Transactions -->
+                <div class="related-section mt-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h5 class="mb-0">Account</h5>
+                                <a href='@Url.Action("Details", "Account", new { id = "ACC-2026-001" })' class="small">View account</a>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="fw-semibold">ACC-2026-001</div>
+                                <small class="text-muted">John Smith • Available R 24,500.00</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

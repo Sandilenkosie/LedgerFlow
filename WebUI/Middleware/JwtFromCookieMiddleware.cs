@@ -27,6 +27,7 @@ public class JwtFromCookieMiddleware
 
         await _next(context);
     }
+
 }
 
 public static class JwtFromCookieMiddlewareExtensions
@@ -34,3 +35,4 @@ public static class JwtFromCookieMiddlewareExtensions
     public static IApplicationBuilder UseJwtFromCookie(this IApplicationBuilder app)
         => app.UseMiddleware<JwtFromCookieMiddleware>();
 }
+

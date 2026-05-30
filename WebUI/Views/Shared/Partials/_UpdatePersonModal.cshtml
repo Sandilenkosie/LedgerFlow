@@ -1,0 +1,62 @@
+﻿<!-- Update Person Modal -->
+<div class="modal fade" id="updatePersonModal" tabindex="-1" aria-labelledby="updatePersonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Update" asp-controller="Person" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePersonModalLabel">Update Person</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="person-id" />
+
+                    <div class="mb-3">
+                        <label for="person-fullname" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="person-fullname" name="FullName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="person-idnumber" class="form-label">ID Number</label>
+                        <input type="text" class="form-control" id="person-idnumber" name="IdNumber" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="person-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="person-email" name="Email" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="person-phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="person-phone" name="Phone" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Helper script: call openUpdatePersonModal(person) with an object to populate and show modal *@
+<script>
+    function openUpdatePersonModal(person) {
+        // person: { id, fullName, idNumber, email, phone }
+        document.getElementById('person-id').value = person?.id ?? person?.Id ?? '';
+        document.getElementById('person-fullname').value = person?.fullName ?? person?.FullName ?? '';
+        document.getElementById('person-idnumber').value = person?.idNumber ?? person?.IdNumber ?? '';
+        document.getElementById('person-email').value = person?.email ?? person?.Email ?? '';
+        document.getElementById('person-phone').value = person?.phone ?? person?.Phone ?? '';
+
+        var modalEl = document.getElementById('updatePersonModal');
+        if (typeof showModalElement === 'function') {
+            showModalElement(modalEl);
+        } else {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    }
+</script>

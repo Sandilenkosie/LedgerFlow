@@ -14,13 +14,19 @@ public class MappingProfile : Profile
 
         // Map RegisterViewModel to domain User for creating new users
         CreateMap<RegisterViewModel, User>();
+        CreateMap<PersonViewModel, User>();
 
-        CreateMap<User, PersonViewModel>();
+        CreateMap<User, PersonViewModel>()
+            .ForMember(dest => dest.Accounts, opt => opt.MapFrom(src => src.Accounts));
 
-        CreateMap<CreateAccountCommand, Account>()
-            .ConstructUsing(src => new Account(src.AccountNumber));
+        // Map Account to the lightweight RelatedAccountsViewModel used on person listings
+        CreateMap<Account, RelatedAccountsViewModel>();
 
-        CreateMap<CreateTransactionCommand, Transaction>()
-            .ConstructUsing(src => new Transaction(src.Amount, src.Date));
+        CreateMap<Account, AccountViewModel>();
+
+        // account creation mapping handled in handler; keep Account mapping configured
+
+        CreateMap<Transaction, RelatedTransactionsViewModel>();
+        CreateMap<Transaction, TransactionViewModel>();
     }
 }

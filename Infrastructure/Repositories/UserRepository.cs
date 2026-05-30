@@ -17,7 +17,10 @@ namespace Infrastructure.Repositories
         }
 
         public async Task<User?> GetByUsernameAsync(string username) =>
-            await _context.Users.Include(a => a.Accounts).FirstOrDefaultAsync(u => u.Username == username);
+            await _context.Users
+                .Include(u => u.Accounts)
+                    .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Username == username);
 
         public async Task AddAsync(User user)
         {
@@ -25,13 +28,23 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Guid userId, User user) 
+        public async Task<User?> GetByIdAsync(Guid id) =>
+            await _context.Users
+                .Include(u => u.Accounts)
+                    .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+        public async Task UpdateAsync(Guid personId,User user) 
         {
-            var existingUser = await _context.Users.Include(a => a.Accounts).FirstOrDefaultAsync(u => u.Id == userId);
+            var existingUser = await _context.Users
+                .Include(u => u.Accounts)
+                    .ThenInclude(a => a.Transactions)
+                .FirstOrDefaultAsync(u => u.Id == personId);
             if (existingUser is not null)
             {
                 existingUser.Name = user.Name;
                 existingUser.UpdateUsername(user.Username);
+                existingUser.UpdateIdNumber(user.IdNumber);
                 existingUser.PasswordHash = user.PasswordHash;
                 _context.Users.Update(existingUser);
                 await _context.SaveChangesAsync();
@@ -48,6 +61,11 @@ namespace Infrastructure.Repositories
             }
         }
         public async Task<IEnumerable<User>> GetAllAsync(int page, int pageSize) =>
-              await _context.Users.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+              await _context.Users
+                    .Include(u => u.Accounts)
+                        .ThenInclude(a => a.Transactions)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
     }
 }

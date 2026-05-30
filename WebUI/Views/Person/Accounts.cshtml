@@ -1,0 +1,161 @@
+﻿@model IEnumerable<Application.ViewModels.AccountViewModel>
+
+@{
+    ViewData["Title"] = "Accounts";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    var userId = User?.Identity?.Name ?? string.Empty;
+}
+
+<div class=" py-0">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-0">Accounts Management</h2>
+            <p class="text-muted mb-0">Manage accounts and transactions</p>
+        </div>
+
+        <button type="button" class="btn btn-primary px-4 py-2 rounded-pill"
+                data-bs-toggle="modal" data-bs-target="#addAccountModal" data-userid="@userId">
+            <i class="fa-solid fa-plus me-2"></i>
+            Add Account
+        </button>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDE -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm sidebar-card p-3" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Search -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search accounts...">
+                    </div>
+                </div>
+
+                <!-- Accounts list -->
+                <div class="list-group">
+                @foreach (var account in Model)
+                {
+                    <a href='@Url.Action("Details", "Account", new { id = account.Id })' 
+                    data-account='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(account))'
+                       class="person-item list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 px-3 rounded-lg mb-2 shadow-sm"
+                       style="cursor:pointer;">
+                        <div>
+                            <h6 class="mb-0 fw-bold">@account.AccountNumber</h6>
+                            <small>
+                                @((account.IsClosed) ? "Closed" : "Active") • @(account.Person?.Name ?? "Unknown")
+                            </small>
+                        </div>
+                        <div class="text-muted">R @account.Balance</div>
+                    </a>
+                }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-lg-8">
+
+            <!-- Placeholder when no account is selected -->
+            <div id="no-selection" class="text-center py-5">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-muted mx-auto" style="width:120px;height:120px;">
+                    <img src="@Url.Content("~/assets/img/files-svgrepo-com.svg")" alt="Account" style="width:72px;height:72px;" />
+                </div>
+                <p class="text-muted mt-3">No selected account</p>
+            </div>
+
+            <!-- Account details (hidden until an account is selected) -->
+            <div id="person-details" class="details-panel d-none p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+
+                <!-- Top -->
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
+
+                    <div class="d-flex align-items-center gap-4">
+                        <div>
+                            <h2 id="account-number-title" class="fw-bold mb-1">ACC-2026-001</h2>
+                            <p id="account-owner" class="text-muted mb-2">Primary Account • John Smith</p>
+
+                            <span id="account-status-badge" class="badge bg-success badge-status">
+                                Active
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 mt-md-0">
+                        <div class="dropdown ms-auto">
+                            <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                                <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a id="make-transaction-link" class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addTransactionModal"><i class="fa-solid fa-pen me-2"></i>Make Transaction</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
+                                <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Details (Bootstrap rows) -->
+                <div class="mb-4">
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Account Number</div>
+                        <div id="detail-account-number" class="col fw-semibold"></div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Account Type</div>
+                        <div id="detail-account-description" class="col fw-semibold"></div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Owner</div>
+                        <div id="detail-account-owner" class="col fw-semibold">John Smith</div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Available Balance</div>
+                        <div id="detail-account-balance" class="col fw-semibold text-success"></div>
+                    </div>
+
+                    <div class="row py-1 align-items-center">
+                        <div class="col-auto col-sm-3 text-muted">Created</div>
+                        <div id="detail-account-created" class="col fw-semibold"></div>
+                    </div>
+                </div>
+
+                <!-- Related: Accounts & Transactions (list view) -->
+                <div class="related-section mt-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h5 class="mb-0">Recent Transactions</h5>
+                                <a href='@Url.Action("Transactions", "Person")' class="small">View all</a>
+                            </div>
+
+                            <ul id="transactions-list" class="list-group">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    @await Html.PartialAsync("Partials/_AddAccountModel")
+    @await Html.PartialAsync("Partials/_AddTransactionModel")
+</div>
+@section Scripts {
+    <script>
+        console.log(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(userId)));
+    </script>
+    <script src="@Url.Content("~/js/account.js")"></script>
+    <script src="@Url.Content("~/js/person.js")"></script>
+    <script src="@Url.Content("~/js/RelatedTransaction.js")"></script>
+}

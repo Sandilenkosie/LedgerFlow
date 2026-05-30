@@ -29,8 +29,12 @@ public class JwtService : IJwtService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+            // Keep the 'sub' claim as the username
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            // Use the standard Name claim to carry the user's Id so User.Identity.Name == user.Id
+            new Claim(ClaimTypes.Name, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            // Also include a uid claim for compatibility if needed elsewhere
             new Claim("uid", user.Id.ToString())
         };
 
