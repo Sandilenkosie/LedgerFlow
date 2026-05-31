@@ -62,8 +62,34 @@ public class Account
         if (IsClosed || (Status != null && string.Equals(Status.Name, "Closed", StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("Cannot add transactions to a closed account.");
         if (transaction.Amount == 0) throw new InvalidOperationException("Transaction amount cannot be zero.");
-        Balance += transaction.Amount;
+
+        // If the user provided a negative amount, subtract its absolute value; if positive, add it.
+        if (transaction.Amount < 0)
+        {
+            Balance -= Math.Abs(transaction.Amount);
+        }
+        else
+        {
+            Balance += transaction.Amount;
+        }
         _transactions.Add(transaction);
+    }
+
+    public void UpdateTransaction(Guid transactionId, decimal amount, DateTime transactionDate, string description)
+    {
+        // Do not allow updates when account is closed
+        if (IsClosed || (Status != null && string.Equals(Status.Name, "Closed", StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Cannot update transactions on a closed account.");
+
+        if (amount == 0) throw new InvalidOperationException("Transaction amount cannot be zero.");
+
+        var existing = _transactions.FirstOrDefault(t => t.Id == transactionId);
+        if (existing == null) throw new InvalidOperationException("Transaction not found on this account.");
+
+        // compute balance delta and apply update through the transaction aggregate
+        var delta = amount - existing.Amount;
+        existing.Update(amount, transactionDate, description ?? string.Empty);
+        Balance += delta;
     }
 
     public void CloseAccount()
@@ -72,5 +98,12 @@ public class Account
         IsClosed = true;
         // Mark status as Closed (use the well-known ClosedId)
         StatusId = Status.ClosedId;
+    }
+
+    public void ReopenAccount()
+    {
+        // Reopen: clear closed flag and set status to Open
+        IsClosed = false;
+        StatusId = Status.OpenId;
     }
 }

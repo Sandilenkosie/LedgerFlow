@@ -40,16 +40,28 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
-    <script>
-        // expose server toast data to client script (prefer TempData so redirects work)
-        window.__serverToastr = {
-            msg: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ToastMessage"] ?? ViewData["ToastMessage"] ?? null)),
-            type: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ToastType"] ?? ViewData["ToastType"] ?? "info"))
-        };
-    </script>
     <script src="/assets/js/toastr-init.js"></script>
+    <script>
+        // Ensure modal cancel/close resets any forms inside the modal and clears validation messages
+        $(function(){
+            $(document).on('hidden.bs.modal', '.modal', function () {
+                try {
+                    var $modal = $(this);
+                    // reset native form fields
+                    $modal.find('form').each(function(){
+                        try { this.reset(); } catch (e) {}
+                        // clear client-side validation messages (commonly .text-danger)
+                        $(this).find('.text-danger').text('');
+                        // re-enable any disabled buttons inside modal
+                        $(this).find('button, input, select, textarea').prop('disabled', false);
+                    });
+                } catch (e) {
+                    // swallow errors to avoid breaking global scripts
+                    console && console.warn && console.warn('modal reset failed', e);
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

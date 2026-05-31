@@ -15,7 +15,9 @@ public class Transaction
 
     private Transaction(decimal amount, DateTime transactionDate, string description = "")
     {
-        if (transactionDate > DateTime.UtcNow)
+        Id = Guid.NewGuid();
+        // Compare only the date portion to avoid rejecting same-day transactions due to time-of-day or timezone differences
+        if (transactionDate.Date > DateTime.UtcNow.Date)
             throw new InvalidOperationException("Transaction date cannot be in the future.");
 
         Amount = amount;
@@ -32,7 +34,8 @@ public class Transaction
     // Update an existing transaction's key values. This refreshes the CaptureDate to now.
     public void Update(decimal amount, DateTime transactionDate, string description)
     {
-        if (transactionDate > DateTime.UtcNow)
+        // Compare only the date portion to avoid rejecting same-day transactions due to time-of-day or timezone differences
+        if (transactionDate.Date > DateTime.UtcNow.Date)
             throw new InvalidOperationException("Transaction date cannot be in the future.");
 
         Amount = amount;

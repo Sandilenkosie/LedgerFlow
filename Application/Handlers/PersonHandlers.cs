@@ -29,6 +29,40 @@ public class GetPersonsHandler : IRequestHandler<GetPersonsQuery, IEnumerable<Pe
     }
 }
 
+public class UpdateAccountHandler : IRequestHandler<UpdateAccountCommand, AccountViewModel>
+{
+    private readonly IAccountRepository _accountRepository;
+    private readonly IMapper _mapper;
+
+    public UpdateAccountHandler(IAccountRepository accountRepository, IMapper mapper)
+    {
+        _accountRepository = accountRepository;
+        _mapper = mapper;
+    }
+
+    public async Task<AccountViewModel> Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetByIdAsync(request.AccountId);
+        if (account == null) throw new InvalidOperationException("Account not found.");
+
+        // Only close operation is handled here; balance and account type are not updated in this command.
+        if (request.Close)
+        {
+            account.CloseAccount();
+            await _accountRepository.UpdateAsync(account);
+        }
+
+        // If Close is false, ensure account is reopened (set IsClosed = false and Status to Open)
+        else
+        {
+            account.ReopenAccount();
+            await _accountRepository.UpdateAsync(account);
+        }
+
+        return _mapper.Map<AccountViewModel>(account);
+    }
+}
+
 public class GetAccountsHandler : IRequestHandler<GetAccountsQuery, IEnumerable<AccountViewModel>>
 {
     private readonly IAccountRepository _accountRepository;
@@ -134,17 +168,21 @@ public class TransactionHandler : IRequestHandler<CreateTransactionCommand, Tran
 
     public async Task<TransactionViewModel> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
     {
-        // load the existing transaction
-        var existingTxn = await _accountRepository.GetTransactionByIdAsync(request.Id);
-        if (existingTxn == null) throw new InvalidOperationException("Transaction not found.");
+        // load the account that owns the transaction
+        var account = await _accountRepository.GetByIdAsync(request.AccountId);
+        if (account == null) throw new InvalidOperationException("Account not found.");
 
-        // update values (this will refresh CaptureDate)
-        existingTxn.Update(request.Amount, request.TransactionDate, request.Description);
+        // ask the account aggregate to update the transaction and adjust balance
+        account.UpdateTransaction(request.Id, request.Amount, request.TransactionDate, request.Description);
 
-        // persist via repository
-        await _accountRepository.UpdateTransactionAsync(existingTxn);
+        // persist the account (which includes the updated transaction)
+        await _accountRepository.UpdateAsync(account);
 
-        return _mapper.Map<TransactionViewModel>(existingTxn);
+        // return the updated transaction mapped from the account's transactions
+        var updatedTxn = account.Transactions.FirstOrDefault(t => t.Id == request.Id);
+        if (updatedTxn == null) throw new InvalidOperationException("Transaction not found after update.");
+
+        return _mapper.Map<TransactionViewModel>(updatedTxn);
     }
 }
 

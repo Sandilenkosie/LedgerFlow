@@ -20,6 +20,8 @@ public class User
     // Full constructor — idNumber and name are optional; idNumber is validated only when provided
     public User(string username, string? idNumber, string? name, string passwordHash)
     {
+        // assign a new Id for newly created users
+        Id = Guid.NewGuid();
         if (string.IsNullOrWhiteSpace(username))
             throw new ArgumentException("Username is required.");
 
@@ -38,6 +40,8 @@ public class User
     // Minimal constructor for registration when idNumber are not provided
     public User(string username, string name, string passwordHash)
     {
+        // assign a new Id for newly created users
+        Id = Guid.NewGuid();
         if (string.IsNullOrWhiteSpace(username))
             throw new ArgumentException("Username is required.");
 
@@ -45,6 +49,12 @@ public class User
         Name = name;
         IdNumber = null;
         PasswordHash = passwordHash;
+    }
+
+    // Factory for creating a new user (explicit intent)
+    public static User Create(string username, string? idNumber, string? name, string passwordHash)
+    {
+        return new User(username, idNumber, name, passwordHash);
     }
 
     public void UpdateUsername(string username)

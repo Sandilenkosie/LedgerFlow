@@ -5,5 +5,6 @@ using MediatR;
 namespace Application.Commands;
 
 public record CreateAccountCommand(Guid UserId, decimal Balance, string AccountType) : IRequest<AccountViewModel>;
-public record CloseAccountCommand(int AccountId) : IRequest;
+// Update account: only support close operation from UI
+public record UpdateAccountCommand(Guid AccountId, bool Close) : IRequest<AccountViewModel>;
 

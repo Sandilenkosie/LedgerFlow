@@ -1,109 +1,154 @@
 (function($){
-    // Account-specific interactions: populate details panel and open transaction modal
-    $(document).ready(function(){
-        // safe fallbacks for helpers provided by person.js
-        var showModal = window.showModalElement || function(el){ if (!el) return; try { if (window.jQuery && typeof $(el).modal === 'function') $(el).modal('show'); } catch(e){} };
-        var applyActive = window.applyActiveTextStyles || function($el) { if (!$el) return; $el.addClass('active'); };
+    $(function(){
+        function parseAccount(data){
+            if (!data) return {};
+            if (typeof data === 'object') return data;
+            try { return JSON.parse(data); } catch (e) { return {}; }
+        }
+
+        $('#addAccountModal').on('show.bs.modal', function(e){
+            var trigger = e.relatedTarget;
+            var userId = trigger ? ($(trigger).data('userid') || $(trigger).attr('data-userid') || '') : '';
+            if (!userId) userId = $('#person-id').val() || '';
+            $('#person-id').val(userId);
+        });
 
         $(document).on('click', '.person-item[data-account]', function(e){
             e.preventDefault();
-            var $el = $(this);
-
-            // manage active state
+            var $item = $(this);
             $('.person-item').removeClass('active');
-            $el.addClass('active');
-            applyActive($el);
+            $item.addClass('active');
 
-            // parse account data
-            var accountJson = $el.attr('data-account') || $el.data('account');
-            var account = {};
-            try { account = (typeof accountJson === 'object') ? accountJson : JSON.parse(accountJson); } catch (ex) { console.error('Failed to parse account data', ex); return; }
+            var account = parseAccount($item.attr('data-account') || $item.data('account'));
+            var owner = (account.Person && account.Person.Name) || (account.person && account.person.Name) || account.OwnerName || account.ownerName || '';
+            var number = account.AccountNumber || account.accountNumber || '';
+            var type = account.AccountType || account.accountType || '';
+            var balance = Number(account.Balance || account.balance || 0);
+            var created = account.Created || account.created || account.CreatedAt || account.createdAt || '';
 
-            // populate right-side fields
-            $('#account-number-title').text(account.accountNumber || account.AccountNumber || '');
-            var ownerName = account.ownerName || account.OwnerName || ((account.person && (account.person.name || account.person.Name)) || '');
-            var ownerText = (account.isClosed ? 'Closed' : 'Active') + ' • ' + ownerName;
-            $('#account-owner').text(ownerText);
-            $('#account-status-badge').removeClass('bg-success bg-secondary bg-danger');
-            $('#account-status-badge').addClass(account.isClosed ? 'bg-secondary' : 'bg-success');
+            $('#account-number-title').text(number);
+            $('#account-owner').text((account.IsClosed || account.isClosed ? 'Closed' : 'Active') + ' • ' + owner);
+            $('#detail-account-number').text(number);
+            $('#detail-account-description').text(type);
+            $('#detail-account-owner').text(owner);
+            $('#detail-account-balance').text('R ' + balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            $('#detail-account-created').text(created ? new Date(created).toLocaleString() : '');
 
-            $('#detail-account-number').text(account.accountNumber || account.AccountNumber || '');
-            $('#detail-account-description').text(account.accountType || account.AccountType || account.description || account.Description || '');
-            $('#detail-account-owner').text(ownerName || '');
-            var balVal = (account.balance !== undefined) ? account.balance : ((account.Balance !== undefined) ? account.Balance : 0);
-            $('#detail-account-balance').text('R ' + Number(balVal).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-            var createdVal = account.createdAt || account.created || account.CreatedAt || account.Created || account.createdAt || account.CreatedAt || '';
-            var createdText = '';
-            if (createdVal) {
-                try { createdText = (new Date(createdVal)).toLocaleString(); } catch (ex) { createdText = String(createdVal); }
-            }
-            $('#detail-account-created').text(createdText);
-
-            // set Make Transaction link and hidden input for modal
-            // keep Make Transaction link as a modal trigger (href '#') and set hidden account id for the form
-            $('#make-transaction-link').attr('href', '#');
-            $('#account-id').val(account.id || account.Id || '');
-
-            // delegate transaction rendering to the shared RelatedTransaction.js helper
-            try {
-                var txs = account.transactions || account.Transactions || [];
-                // ensure data-transactions is available for the renderer
-                $el.attr('data-transactions', JSON.stringify(txs));
-                if (typeof window.renderRelatedTransactions === 'function') {
-                    window.renderRelatedTransactions($el);
-                } else {
-                    // fallback: clear list and show message
-                    var $txListFallback = $('#transactions-list');
-                    $txListFallback.empty();
-                    if (txs && txs.length > 0) {
-                        txs.forEach(function(t){
-                            var id = t.id || t.Id || '';
-                            var title = t.description || t.Description || t.title || t.Title || 'Transaction';
-                            var date = t.transactionDate || t.TransactionDate || t.Date || t.date || '';
-                            var amount = t.amount || t.Amount || 0;
-                            var displayDate = date ? (new Date(date)).toLocaleDateString() : '';
-                            var isPositive = Number(amount) >= 0;
-                            var amountText = (isPositive ? '+ ' : '- ') + 'R ' + Math.abs(Number(amount || 0)).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-                            var amountClass = isPositive ? 'text-success' : 'text-danger';
-                            var $a = $("<a>")
-                                .attr('href', '/Transaction/Details/' + id)
-                                .addClass('list-group-item list-group-item-action d-flex justify-content-between align-items-start')
-                                .append(
-                                    $('<div>').append(
-                                        $('<div>').addClass('fw-semibold').text(title),
-                                        $('<small>').addClass('text-muted').text(displayDate)
-                                    ),
-                                    $('<div>').addClass(amountClass).text(amountText)
-                                );
-                            $txListFallback.append($a);
-                        });
-                    } else {
-                        $txListFallback.append('<li class="list-group-item text-muted">No transactions available for this account.</li>');
-                    }
-                }
-            }
-            catch (ex) {
-                console.error('Failed to render transactions for account', ex);
+            var $txList = $('#transactions-list').empty();
+            var txs = account.Transactions || account.transactions || [];
+            if (!txs.length) {
+                $txList.append('<li class="list-group-item text-muted">No transactions available.</li>');
+            } else {
+                txs.forEach(function(t){
+                    var amount = Number(t.Amount || t.amount || 0);
+                    var text = t.Description || t.description || 'Transaction';
+                    var date = t.TransactionDate || t.transactionDate || '';
+                    var cls = amount >= 0 ? 'text-success' : 'text-danger';
+                    var sign = amount >= 0 ? '+ ' : '- ';
+                    $txList.append(
+                        '<a href="/Transaction/Details/' + (t.Id || t.id || '') + '" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">' +
+                            '<div><div class="fw-semibold">' + text + '</div><small class="text-muted">' + (date ? new Date(date).toLocaleDateString() : '') + '</small></div>' +
+                            '<div class="' + cls + '">' + sign + 'R ' + Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div>' +
+                        '</a>'
+                    );
+                });
             }
 
-            // show details
+            $('#account-id').val(account.Id || account.id || '');
+            $('#update-account-id').val(account.Id || account.id || '');
             $('#no-selection').addClass('d-none');
             $('#person-details').removeClass('d-none');
         });
 
-        // open add transaction modal when Make Transaction link or buttons target modal
-        $(document).on('click', '#make-transaction-link, button[data-bs-target="#addTransactionModal"], button[data-target="#addTransactionModal"]', function(e){
-            // allow normal link behavior for href if it's a navigation; if href is #, open modal using hidden input
-            var href = $(this).attr('href');
-            if (href && href !== '#') {
-                // navigate
+        // submit update account via AJAX (close-only)
+        function getToastManager() {
+            if (window._ledger_toast_manager) return window._ledger_toast_manager;
+            if (window.Toaster && window.Toaster.ToastManager) {
+                window._ledger_toast_manager = new Toaster.ToastManager();
+                return window._ledger_toast_manager;
+            }
+            return null;
+        }
+
+        function showToast(type, message) {
+            var tm = getToastManager();
+            var t = (type || 'success').toLowerCase();
+            if (tm) {
+                var mapped = t === 'warn' ? 'warning' : t;
+                tm.addToast(message, mapped, { allowHtml: true });
                 return;
             }
+            if (window.toastr) {
+                if (t === 'error') toastr.error(message);
+                else if (t === 'warning') toastr.warning(message);
+                else if (t === 'info') toastr.info(message);
+                else toastr.success(message);
+            } else {
+                console.log('Toast:', type, message);
+            }
+        }
+
+        $(document).on('submit', '#update-account-form', function(e){
             e.preventDefault();
-            var acctId = $('#account-id').val() || '';
-            // ensure account-id is set before showing modal
-            $('#account-id').val(acctId);
-            showModal(document.getElementById('addTransactionModal'));
+            var $form = $(this);
+            $.ajax({
+                type: 'POST',
+                url: $form.attr('action') || '/Person/UpdateAccount',
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp){
+                if (resp && resp.success) {
+                    showToast('success', resp.message || 'Account updated');
+                    var modalEl = document.getElementById('updateAccountModal');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl);
+                        if (instance) instance.hide();
+                    } else {
+                        $('#updateAccountModal').modal('hide');
+                    }
+                    setTimeout(function(){ window.location.reload(); }, 1200);
+                    return;
+                }
+                showToast('error', (resp && resp.message) || 'Failed to update account');
+            }).fail(function(){
+                showToast('error', 'Failed to update account (network/server error)');
+            });
+        });
+
+        $(document).on('click', '#make-transaction-link', function(e){
+            var href = $(this).attr('href');
+            if (href && href !== '#') return;
+            e.preventDefault();
+            var modalEl = document.getElementById('addTransactionModal');
+            if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(modalEl).show();
+            else $('#addTransactionModal').modal('show');
+        });
+
+        $(document).on('submit', '#add-account-form', function(e){
+            e.preventDefault();
+            var $form = $(this);
+            $.ajax({
+                type: 'POST',
+                url: $form.attr('action') || '/Person/AddAccount',
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp){
+                if (resp && resp.success) {
+                    if (window.toastr) toastr.success(resp.message || 'Account created');
+                    var modalEl = document.getElementById('addAccountModal');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl);
+                        if (instance) instance.hide();
+                    } else {
+                        $('#addAccountModal').modal('hide');
+                    }
+                    setTimeout(function(){ window.location.reload(); }, 1200);
+                    return;
+                }
+                if (window.toastr) toastr.error((resp && resp.message) || 'Failed to create account');
+            }).fail(function(){
+                if (window.toastr) toastr.error('Failed to create account (network/server error)');
+            });
         });
     });
 })(jQuery);

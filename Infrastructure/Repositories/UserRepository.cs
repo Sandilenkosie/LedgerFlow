@@ -71,12 +71,21 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteAsync(Guid userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (user is not null)
-            {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-            }
+            var user = await _context.Users
+                .Include(u => u.Accounts)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user is null)
+                return;
+
+            // Only allow deletion when user has no accounts or all accounts are closed.
+            // Treat an account as open when it's not marked IsClosed and its StatusId is not the well-known ClosedId.
+            var hasOpenAccounts = user.Accounts.Any(a => !a.IsClosed && a.StatusId != Status.ClosedId);
+            if (hasOpenAccounts)
+                throw new InvalidOperationException("Only users with no accounts or where all accounts are closed may be deleted.");
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
         }
         public async Task<IEnumerable<User>> GetAllAsync(int page, int pageSize) =>
               await _context.Users

@@ -15,61 +15,6 @@
         </div>
     </div>
 
-<script>
-    (function(){
-        // Helper to format currency
-        function formatCurrency(value){
-            var num = Number(value);
-            if (isNaN(num)) return value;
-            return 'R ' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function clearActive(){
-            document.querySelectorAll('.person-item.active').forEach(function(el){
-                el.classList.remove('active');
-            });
-        }
-
-        function setDetailsFromElement(el){
-            var desc = el.getAttribute('data-description') || '';
-            var date = el.getAttribute('data-transaction-date') || '';
-            var acc = el.getAttribute('data-account-number') || '';
-            var amount = el.getAttribute('data-amount');
-            var id = el.getAttribute('data-transaction-id') || '';
-
-            document.getElementById('tx-description').textContent = desc || 'No transaction selected';
-            document.getElementById('tx-meta').textContent = (date ? date + ' • ' + acc : '-');
-            document.getElementById('tx-badge').textContent = desc ? 'Completed' : '';
-
-            document.getElementById('tx-id').textContent = id || '-';
-            document.getElementById('tx-date').textContent = date || '-';
-            document.getElementById('tx-account').textContent = acc || '-';
-            document.getElementById('tx-amount').textContent = amount ? formatCurrency(amount) : '-';
-            document.getElementById('tx-status-text').textContent = desc ? 'Completed' : '-';
-        }
-
-        document.addEventListener('DOMContentLoaded', function(){
-            var items = document.querySelectorAll('.person-item');
-            if (!items || items.length === 0) return;
-
-            // Set first as active by default
-            var first = items[0];
-            if(first){
-                first.classList.add('active');
-                setDetailsFromElement(first);
-            }
-
-            items.forEach(function(item){
-                item.addEventListener('click', function(e){
-                    e.preventDefault();
-                    clearActive();
-                    item.classList.add('active');
-                    setDetailsFromElement(item);
-                });
-            });
-        });
-    })();
-</script>
 <!-- Active transaction styles moved to wwwroot/css/site.css -->
     <div class="row g-4">
 
@@ -82,21 +27,23 @@
                 <div class="mb-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0">
-                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <i class="bi bi-search" aria-hidden="true"></i>
                         </span>
                         <input type="text" class="form-control border-start-0" placeholder="Search transactions...">
                     </div>
                 </div>
 
                 <!-- Transactions list -->
-                @foreach(var transaction in Model)
+                @{ var transactions = Model ?? new List<Application.ViewModels.TransactionViewModel>(); var first = transactions.FirstOrDefault(); }
+                @foreach(var transaction in transactions)
                 {
                     var isDebit = transaction.Amount < 0;
-                    <a href='#' data-transaction-id="@transaction.Id"
+                    <a href="#" data-transaction-id="@transaction.Id"
                        data-description="@transaction.Description"
                        data-transaction-date="@transaction.TransactionDate.ToString("dd MMM yyyy")"
+                       data-account-id="@transaction.AccountId"
                        data-account-number="@transaction.AccountNumber"
-                       data-amount="@transaction.Amount"
+                       data-amount="@transaction.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                        class="person-item list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 px-3 rounded-lg mb-2 shadow-sm"
                        style="cursor:pointer;">
                         <div class="d-flex flex-column">
@@ -120,85 +67,85 @@
 
         <!-- RIGHT SIDE -->
         <div class="col-lg-8">
+            @if (transactions.Any())
+            {
+                <div class="details-panel p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
 
-            <div class="details-panel p-4" style="max-height: calc(100vh - 180px); overflow-y: auto;">
+                    <!-- Top -->
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
 
-                <!-- Top -->
-                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-5">
+                        <div class="d-flex align-items-center gap-4">
+                            <div>
+                                <h2 id="tx-description" class="fw-bold mb-1">@((first != null && !string.IsNullOrWhiteSpace(first.Description)) ? first.Description : "No transaction selected")</h2>
+                                <p id="tx-meta" class="text-muted mb-2">@((first != null) ? first.TransactionDate.ToString("dd MMM yyyy") + " • " + first.AccountNumber : "-")</p>
 
-                    <div class="d-flex align-items-center gap-4">
-                        <div>
-                            @{ var first = Model.FirstOrDefault(); }
-                            <h2 id="tx-description" class="fw-bold mb-1">@((first != null && !string.IsNullOrWhiteSpace(first.Description)) ? first.Description : "No transaction selected")</h2>
-                            <p id="tx-meta" class="text-muted mb-2">@((first != null) ? first.TransactionDate.ToString("dd MMM yyyy") + " • " + first.AccountNumber : "-")</p>
-
-                            <span id="tx-badge" class="badge bg-secondary badge-status">
-                                @((first != null) ? "Completed" : "")
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 mt-md-0">
-                        <div class="dropdown ms-auto">
-                            <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
-                                <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href=@Url.Action("MakeTransaction", "Person", new { Id = "ACC-2026-001" }) ><i class="fa-solid fa-pen me-2"></i>Make Transaction</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
-                                <li><button class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transaction Details (Bootstrap rows) -->
-                <div class="mb-4">
-                    @{ var tx = Model.FirstOrDefault(); }
-                    <div class="row py-1 align-items-center">
-                        <div class="col-auto col-sm-3 text-muted">Reference</div>
-                        <div id="tx-id" class="col fw-semibold">@((tx != null) ? tx.Id.ToString() : "-")</div>
-                    </div>
-
-                    <div class="row py-1 align-items-center">
-                        <div class="col-auto col-sm-3 text-muted">Date</div>
-                        <div id="tx-date" class="col fw-semibold">@((tx != null) ? tx.TransactionDate.ToString("dd MMM yyyy") : "-")</div>
-                    </div>
-
-                    <div class="row py-1 align-items-center">
-                        <div class="col-auto col-sm-3 text-muted">Account</div>
-                        <div id="tx-account" class="col fw-semibold">@((tx != null) ? tx.AccountNumber : "-")</div>
-                    </div>
-
-                    <div class="row py-1 align-items-center">
-                        <div class="col-auto col-sm-3 text-muted">Amount</div>
-                        <div id="tx-amount" class="col fw-semibold text-danger">@((tx != null) ? ("R " + tx.Amount.ToString("N2")) : "-")</div>
-                    </div>
-
-                    <div class="row py-1 align-items-center">
-                        <div class="col-auto col-sm-3 text-muted">Status</div>
-                        <div id="tx-status-text" class="col fw-semibold">@((tx != null) ? "Completed" : "-")</div>
-                    </div>
-                </div>
-
-                <!-- Related: Account Summary & Recent Transactions -->
-                <div class="related-section mt-4">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <h5 class="mb-0">Account</h5>
-                                <a href='@Url.Action("Details", "Account", new { id = "ACC-2026-001" })' class="small">View account</a>
+                                <span id="tx-badge" class="badge bg-success badge-status">@((first != null) ? "Completed" : "")</span>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="fw-semibold">@((tx != null) ? tx.AccountNumber : "-")</div>
-                                <small class="text-muted">@((tx != null) ? ("• Available R " + tx.Amount.ToString("N2")) : "-")</small>
+                        <div class="mt-4 mt-md-0">
+                            <div class="dropdown ms-auto">
+                                <button class="btn btn-sm p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                                    <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <button type="button" class="dropdown-item" onclick="(function(){ var el = document.querySelector('.person-item.active'); if(!el) return false; var tx = { Id: el.getAttribute('data-transaction-id'), AccountId: el.getAttribute('data-account-id'), Amount: el.getAttribute('data-amount'), TransactionDate: el.getAttribute('data-transaction-date'), Description: el.getAttribute('data-description') }; if (typeof openEditTransactionModal === 'function') openEditTransactionModal(tx); return false; })();">
+                                            <i class="bi bi-pencil me-2" aria-hidden="true"></i>Edit
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Transaction Details (Bootstrap rows) -->
+                    <div class="mb-4">
+                        @{ /* reuse 'first' declared earlier */ var isDebitFirst = (first != null && first.Amount < 0); }
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Reference</div>
+                            <div id="tx-id" class="col fw-semibold">@first.Id.ToString()</div>
+                        </div>
+
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Date</div>
+                        <div id="tx-date" class="col fw-semibold">@first.TransactionDate.ToString("dd MMM yyyy")</div>
+                        </div>
+
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Account</div>
+                            <div id="tx-account" class="col fw-semibold">@first.AccountNumber</div>
+                        </div>
+
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Amount</div>
+                            <div id="tx-amount" class="col fw-semibold @(isDebitFirst ? "text-danger" : "text-success")">@((first != null) ? (isDebitFirst ? ("- R " + Math.Abs(first.Amount).ToString("N2")) : ("R " + first.Amount.ToString("N2"))) : "-")</div>
+                        </div>
+
+                        <div class="row py-1 align-items-center">
+                            <div class="col-auto col-sm-3 text-muted">Status</div>
+                            <div id="tx-status-text" class="col fw-semibold">Completed</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="details-panel p-4 d-flex align-items-center justify-content-center" style="max-height: calc(100vh - 180px);">
+                    <div id="no-selection" class="text-center py-5">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-muted mx-auto" style="width:120px;height:120px;">
+                            <img src="@Url.Content("~/assets/img/files-svgrepo-com.svg")" alt="No transactions" style="width:72px;height:72px;" />
+                        </div>
+                        <p class="text-muted mt-3">No transactions</p>
+                    </div>
+                </div>
+            }
         </div>
+        @await Html.PartialAsync("partials/_UpdateTransactionModel")
 
     </div>
 </div>
+@section Scripts {
+    <script src="@Url.Content("~/js/transaction.js")"></script>
+    <script src="@Url.Content("~/js/transactions.js")"></script>
+}

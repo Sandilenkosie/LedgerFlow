@@ -512,3 +512,102 @@ body {
     color: #495057 !important;
     font-weight: 600 !important;
 }
+
+/* Explicit final Toastr overrides (force white background and dark text) */
+#toast-container > .toast,
+.toast {
+    background-image: initial !important;
+    background-repeat: no-repeat !important;
+    background-position: 14px center !important;
+    background-size: 20px 20px !important;
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border: 1px solid rgba(11,18,32,0.12) !important;
+    border-left: 5px solid #6c757d !important;
+    border-radius: 12px !important;
+    min-height: 64px !important;
+    width: 380px !important;
+    padding: 14px 16px 14px 52px !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+    box-shadow: 0 10px 30px rgba(11,18,32,0.10) !important;
+    opacity: 1 !important;
+}
+
+#toast-container > .toast .toast-title,
+#toast-container > .toast .toast-message,
+.toast-title,
+.toast-message {
+    color: #212529 !important;
+}
+
+#toast-container > .toast-success,
+.toast-success { border-left: 4px solid #198754 !important; }
+#toast-container > .toast-error,
+.toast-error { border-left: 4px solid #dc3545 !important; }
+#toast-container > .toast-info,
+.toast-info { border-left: 4px solid #0dcaf0 !important; }
+#toast-container > .toast-warning,
+.toast-warning { border-left: 4px solid #ffc107 !important; }
+
+/* Custom toastr styles moved here from runtime injection */
+.toast.custom-toast {
+    background-color: #ffffff !important;
+    color: #071029 !important;
+    font-size: 1rem !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(3,12,26,0.12) !important;
+    display: flex;
+    align-items: center;
+}
+
+.toast.custom-toast .toast-title {
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.toast.custom-toast .toast-message {
+    margin: 0;
+}
+
+.toast-success.custom-toast { border-left: 6px solid #198754 !important; }
+.toast-error.custom-toast { border-left: 6px solid #dc3545 !important; }
+.toast-warning.custom-toast { border-left: 6px solid #ffc107 !important; }
+.toast-info.custom-toast { border-left: 6px solid #0dcaf0 !important; }
+
+.toast.custom-toast i,
+.toast.custom-toast .toast-icon {
+    color: #071029 !important;
+    font-size: 1.25rem;
+    margin-right: 10px;
+}
+
+.toast .toast-close-button {
+    color: #444 !important;
+    opacity: .9 !important;
+}
+
+/* Ensure Bootstrap icons and inline SVGs are visible on white toast background */
+.toast.custom-toast .bi,
+.toast.custom-toast svg,
+.toast.custom-toast .toast-icon {
+    color: #071029 !important;
+    fill: #071029 !important;
+    stroke: #071029 !important;
+}
+
+/* Make close controls clearly visible on white toast */
+.toast.custom-toast .btn-close,
+.toast.custom-toast .toast-close-button,
+.toast.custom-toast .close {
+    color: #212529 !important;
+    filter: none !important;
+    opacity: 0.9 !important;
+}
+
+/* Slightly larger Bootstrap icon for readability */
+.toast.custom-toast .bi {
+    font-size: 1.3rem;
+    margin-right: 12px;
+}

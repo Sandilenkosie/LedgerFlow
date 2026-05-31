@@ -3,10 +3,13 @@
 @{
     ViewData["Title"] = "Accounts";
     Layout = "~/Views/Shared/_AuthLayout.cshtml";
-    var userId = User?.Identity?.Name ?? string.Empty;
+    var userId = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 }
 
 <div class="py-0">
+
+    @* Render an antiforgery token so AJAX posts can include it *@
+    <form id="anti-forgery-form">@Html.AntiForgeryToken()</form>
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center">
@@ -17,9 +20,30 @@
 
         <button type="button" class="btn btn-primary px-4 py-2 rounded-pill"
                 data-bs-toggle="modal" data-bs-target="#addAccountModal" data-userid="@userId">
-            <i class="fa-solid fa-plus me-2"></i>
+            <i class="bi bi-plus me-2" aria-hidden="true"></i>
             Add Account
         </button>
+    </div>
+
+    <!-- Horizontal actions (Close / Re-open) -->
+    <style>
+        .account-action { color: #8B0000; text-decoration: none; }
+        .account-action.disabled-action { color: var(--bs-gray-500, #6c757d); pointer-events: none; opacity: 0.8; }
+    </style>
+
+    <div class="d-flex gap-3 align-items-center mt-3">
+        <a href="#" id="close-account-action" class="account-action disabled-action d-inline-flex align-items-center"
+           aria-disabled="true" tabindex="-1">
+            <i class="bi bi-lock-fill me-2" aria-hidden="true"></i>
+            <span class="fw-semibold">Close account</span>
+        </a>
+
+        <a href="#" id="reopen-account-action" class="account-action disabled-action d-inline-flex align-items-center"
+           aria-disabled="true" tabindex="-1">
+            <i class="bi bi-unlock-fill me-2" aria-hidden="true"></i>
+            <span class="fw-semibold">Re-open account</span>
+        </a>
+
     </div>
 
     <div class="row g-4">
@@ -33,15 +57,16 @@
                 <div class="mb-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0">
-                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <i class="bi bi-search" aria-hidden="true"></i>
                         </span>
                         <input type="text" class="form-control border-start-0" placeholder="Search accounts...">
                     </div>
                 </div>
 
                 <!-- Accounts list -->
+                @{ var accounts = Model ?? new List<Application.ViewModels.AccountViewModel>(); }
                 <div class="list-group">
-                @foreach (var account in Model)
+                @foreach (var account in accounts)
                 {
                     <a href='@Url.Action("Details", "Account", new { id = account.Id })' 
                        data-account='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { Id = account.Id, AccountNumber = account.AccountNumber, Balance = account.Balance, IsClosed = account.IsClosed, AccountType = account.AccountType, Created = account.Created, Person = (account.Person == null ? null : new { Id = account.Person.Id, Name = account.Person.Name }), OwnerName = (account.Person == null ? (string?)null : account.Person.Name), Transactions = (account.Transactions == null ? null : account.Transactions.Select(t => new { Id = t.Id, Amount = t.Amount, Description = t.Description, TransactionDate = t.TransactionDate })) }))'
@@ -83,7 +108,7 @@
                             <p id="account-owner" class="text-muted mb-2">Primary Account • John Smith</p>
 
                             <span id="account-status-badge" class="badge bg-success badge-status">
-                                Active
+                                Open
                             </span>
                         </div>
                     </div>
@@ -94,9 +119,9 @@
                                 <span class="kebab text-dark fs-3" aria-hidden="true">&#x22EE;</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a id="make-transaction-link" class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addTransactionModal"><i class="fa-solid fa-pen me-2"></i>Make Transaction</a></li>
-                                <li><a id="edit-account-link" class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateAccountModal"><i class="fa-solid fa-pen me-2"></i>Edit</a></li>
-                                <li><button id="remove-account-button" class="dropdown-item text-danger" type="button"><i class="fa-solid fa-trash me-2"></i>Remove</button></li>
+                                <li><a id="make-transaction-link" class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addTransactionModal"><i class="bi bi-pencil me-2" aria-hidden="true"></i>Make Transaction</a></li>
+                                <li><a id="edit-account-link" class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateAccountModal"><i class="bi bi-pencil me-2" aria-hidden="true"></i>Edit</a></li>
+                                <li><button id="remove-account-button" class="dropdown-item text-danger" type="button"><i class="bi bi-trash me-2" aria-hidden="true"></i>Remove</button></li>
                             </ul>
                         </div>
                     </div>
@@ -153,6 +178,30 @@
     @await Html.PartialAsync("Partials/_UpdateAccountModel")
 
 </div>
+
+<!-- Confirmation modal used by actions.js (form posts to UpdateAccount) -->
+<form id="confirmActionForm" asp-controller="Person" asp-action="UpdateAccount" method="post">
+  @Html.AntiForgeryToken()
+  <input type="hidden" name="accountId" id="confirm-form-accountId" />
+  <input type="hidden" name="Close" id="confirm-form-close" />
+  <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmActionModalLabel">Confirm action</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="confirmActionModalBody">
+          Are you sure?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmActionCancel">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmActionConfirm">Yes, proceed</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
 @section Scripts {
     <script>
         console.log(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(userId)));
@@ -160,4 +209,6 @@
     <script src="@Url.Content("~/js/account.js")"></script>
     <script src="@Url.Content("~/js/person.js")"></script>
     <script src="@Url.Content("~/js/RelatedTransaction.js")"></script>
+    <script src="@Url.Content("~/js/transaction.js")"></script>
+    <script src="@Url.Content("~/js/actions.js")"></script>
 }

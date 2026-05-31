@@ -30,6 +30,17 @@ public class AccountRepository : IAccountRepository
 
     public async Task AddAsync(Account account)
     {
+        // Ensure the referenced Status row exists to satisfy FK constraints
+        if (account.StatusId != Guid.Empty)
+        {
+            var statusExists = await _context.Statuses.AnyAsync(s => s.Id == account.StatusId);
+            if (!statusExists)
+            {
+                var toAdd = account.Status ?? (account.StatusId == Status.OpenId ? Status.Open() : Status.Closed());
+                _context.Statuses.Add(toAdd);
+            }
+        }
+
         _context.Accounts.Add(account);
         await _context.SaveChangesAsync();
     }
@@ -60,18 +71,78 @@ public class AccountRepository : IAccountRepository
 
     public async Task UpdateAsync(Account account)
     {
-        _context.Accounts.Update(account);
-        await _context.SaveChangesAsync();
+        // Load the tracked account and apply domain changes
+        var existing = await _context.Accounts
+            .Include(a => a.Transactions)
+            .FirstOrDefaultAsync(a => a.Id == account.Id);
+
+        if (existing == null) throw new InvalidOperationException("Account not found when attempting update.");
+
+        // Apply domain state changes (close/reopen) so invariants are respected
+        if (existing.IsClosed != account.IsClosed)
+        {
+            if (account.IsClosed) existing.CloseAccount(); else existing.ReopenAccount();
+        }
+
+        // Update allowed scalar
+        existing.AccountType = account.AccountType;
+
+        // Add any new transactions that are not already tracked
+        if (account.Transactions != null)
+        {
+            foreach (var tx in account.Transactions)
+            {
+                if (!existing.Transactions.Any(t => t.Id == tx.Id)) _context.Transactions.Add(tx);
+            }
+        }
+
+        // Ensure Status row exists (check DB/local first)
+        var statusId = existing.StatusId;
+        if (statusId != Guid.Empty)
+        {
+            var found = await _context.Statuses.FindAsync(statusId);
+            if (found == null && _context.Statuses.Local.All(s => s.Id != statusId))
+            {
+                _context.Statuses.Add(statusId == Status.OpenId ? Status.Open() : Status.Closed());
+            }
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            throw new InvalidOperationException($"An error occurred while saving the entity changes: {inner}", ex);
+        }
     }
 
     public async Task CloseAsync(Guid id)
     {
         var account = await _context.Accounts.FindAsync(id);
-        if (account != null)
+        if (account == null) return;
+
+        account.CloseAccount();
+
+        var statusToEnsure = account.StatusId;
+        if (statusToEnsure != Guid.Empty)
         {
-            account.CloseAccount();
-            _context.Accounts.Update(account);
+            var found = await _context.Statuses.FindAsync(statusToEnsure);
+            if (found == null && _context.Statuses.Local.All(s => s.Id != statusToEnsure))
+            {
+                _context.Statuses.Add(statusToEnsure == Status.OpenId ? Status.Open() : Status.Closed());
+            }
+        }
+
+        try
+        {
             await _context.SaveChangesAsync();
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            throw new InvalidOperationException($"An error occurred while saving the entity changes: {inner}", ex);
         }
     }
 

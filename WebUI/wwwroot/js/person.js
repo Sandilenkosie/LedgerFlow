@@ -1,234 +1,215 @@
-(function($){
-    // jQuery-based person list interactions
-    $(document).ready(function(){
+ (function($){
+    $(function(){
         var $items = $('.person-item');
 
-        function showNoSelection() {
+        function clearDetails(){
+            $('#person-name, #person-username-text, #detail-fullname, #detail-idnumber').text('');
             $('#no-selection').removeClass('d-none');
             $('#person-details').addClass('d-none');
+            // disable delete action when no selection
+            $('#delete-person-action').addClass('disabled-action').attr('aria-disabled','true').attr('tabindex','-1');
         }
 
-        function showDetails() {
+        function showDetails(){
             $('#no-selection').addClass('d-none');
             $('#person-details').removeClass('d-none');
+            // enable delete action when a person is selected
+            $('#delete-person-action').removeClass('disabled-action').removeAttr('aria-disabled').removeAttr('tabindex');
         }
 
-        // Start with no selection
-        showNoSelection();
+        // start empty
+        clearDetails();
 
-        // Helper to safely show a Bootstrap modal (supports Bootstrap 5 global or jQuery fallback)
-        function showModalElement(modalEl) {
-            if (!modalEl) return;
-            try {
-                if (typeof bootstrap !== 'undefined' && bootstrap && typeof bootstrap.Modal === 'function') {
-                    var modal = new bootstrap.Modal(modalEl);
-                    modal.show();
-                    return;
-                }
-            } catch (ex) {
-                console.warn('bootstrap.Modal failed, falling back to jQuery if available', ex);
+        // Toast helper using new Toaster when available
+        function getToastManager() {
+            if (window._ledger_toast_manager) return window._ledger_toast_manager;
+            if (window.Toaster && window.Toaster.ToastManager) {
+                window._ledger_toast_manager = new Toaster.ToastManager();
+                return window._ledger_toast_manager;
             }
-
-            // jQuery/bootstrap 4 fallback
-            if (window.jQuery && typeof $(modalEl).modal === 'function') {
-                $(modalEl).modal('show');
-                return;
-            }
-
-            console.warn('No modal method available to show element', modalEl);
+            return null;
         }
 
-        // helper to apply active text styling to an item
-        function applyActiveTextStyles($el) {
-            // reset all items
-            $items.each(function() {
-                var $it = $(this);
-                $it.find('.fw-semibold').removeClass('fw-bold');
-                $it.find('h6').removeClass('text-dark');
-                $it.find('small').removeClass('text-dark').addClass('text-muted');
-            });
-
-            // apply to selected
-            if ($el && $el.length) {
-                $el.find('.fw-semibold').addClass('fw-bold');
-                $el.find('h6').addClass('text-dark');
-                $el.find('small').removeClass('text-muted').addClass('text-dark');
+        function showToast(type, message, options) {
+            var tm = getToastManager();
+            var t = (type || 'success').toLowerCase();
+            if (tm) {
+                var mapped = t === 'warn' ? 'warning' : t;
+                tm.addToast(message, mapped, Object.assign({ allowHtml: true }, options || {}));
+            } else if (window.toastr) {
+                if (t === 'error') toastr.error(message);
+                else if (t === 'warning' || t === 'warn') toastr.warning(message);
+                else if (t === 'info') toastr.info(message);
+                else toastr.success(message);
+            } else {
+                console.log('Toast:', type, message);
             }
         }
 
+        // simple selection
         $items.on('click', function(e){
             e.preventDefault();
             $items.removeClass('active');
             $(this).addClass('active');
-            applyActiveTextStyles($(this));
 
-            var id = $(this).data('id');
-            var name = $(this).data('name');
-            var username = $(this).data('username');
-            var idnumber = $(this).data('idnumber');
-            var email = $(this).data('email');
-            var phone = $(this).data('phone');
+            var $el = $(this);
+            var id = $el.data('id');
+            var name = $el.data('name') || '';
+            var username = $el.data('username') || '';
+            var idnumber = $el.data('idnumber') || '';
 
-            // populate fields
-            $('#person-name').text(name || '');
-            $('#person-username-text').text(username || '');
-            $('#detail-fullname').text(name || '');
-            $('#detail-idnumber').text(idnumber || '');
-            $('#detail-email').text(email || '');
-            $('#detail-phone').text(phone || '');
+            $('#person-name').text(name);
+            $('#person-username-text').text(username);
+            $('#detail-fullname').text(name);
+            $('#detail-idnumber').text(idnumber);
 
-            // Render related accounts using shared helper if available
-            if (window.renderRelatedAccounts) {
-                window.renderRelatedAccounts(this);
-            } else {
-                console.warn('renderRelatedAccounts is not defined. Ensure RelatedAccount.js is loaded.');
-            }
-
-            // Render related transactions using shared helper if available
-            if (window.renderRelatedTransactions) {
-                window.renderRelatedTransactions(this);
-            } else {
-                console.warn('renderRelatedTransactions is not defined. Ensure RelatedTransaction.js is loaded.');
-            }
+            // call shared renderers if present (keeps this file small)
+            if (typeof window.renderRelatedAccounts === 'function') window.renderRelatedAccounts($el);
+            if (typeof window.renderRelatedTransactions === 'function') window.renderRelatedTransactions($el);
 
             showDetails();
         });
 
-        // Optional: clear selection when clicking outside (basic implementation)
-        $(document).on('click', function(e){
-            if ($(e.target).closest('.person-item, .details-panel').length === 0) {
-                $items.removeClass('active');
-                showNoSelection();
-            }
-        });
-
-        // Expose a helper to open the Add Account modal and populate fields
-        window.openAddAccountModal = function(person) {
-            // support both camelCase and PascalCase properties
+        // open add account modal
+        window.openAddAccountModal = function(person){
             var id = (person && (person.id || person.Id)) || '';
             $('#person-id').val(id);
             $('#account-type').val('Primary');
-
-            var modalEl = document.getElementById('addAccountModal');
-            showModalElement(modalEl);
+            var modal = document.getElementById('addAccountModal');
+            if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(modal).show(); else $(modal).modal('show');
         };
 
-        // Listen for any button that targets the Add Account modal and has a data-userid attribute
-        $(document).on('click', 'button[data-target="#addAccountModal"], button[data-bs-target="#addAccountModal"]', function(e){
-            // allow bootstrap's default behavior to proceed for non-JS environments, but handle via JS here
+        // ensure click on delete action triggers the modal (delegated)
+        $(document).on('click', '#delete-person-action', function(e){
             e.preventDefault();
-
-            var $btn = $(this);
-            var userId = $btn.data('userid') || $btn.attr('data-userid') || '';
-
-            // Call the helper with a simple person-like object
-            window.openAddAccountModal({ Id: userId});
+            var $this = $(this);
+            if ($this.hasClass('disabled-action')) return;
+            // call the same function
+            window.deleteCurrentPerson();
         });
 
-        // Expose a helper to open the Add Transaction modal and populate fields
-        window.openAddTransactionModal = function (account) {
-            // support both camelCase and PascalCase properties
-            var id = (account && (account.id || account.Id)) || '';
-            // account-id is the hidden field used by the Add Transaction form
-            $('#account-id').val(id);
-
-            // clear/reset transaction fields
-            $('#transaction-id').val('');
-            $('#transaction-amount').val('');
-            // default date to today (local date string in yyyy-mm-dd)
-            try {
-                var today = new Date();
-                var yyyy = today.getFullYear();
-                var mm = String(today.getMonth() + 1).padStart(2, '0');
-                var dd = String(today.getDate()).padStart(2, '0');
-                $('#transaction-date').val(yyyy + '-' + mm + '-' + dd);
-            } catch (ex) { $('#transaction-date').val(''); }
-
-            var modalEl = document.getElementById('addTransactionModal');
-            showModalElement(modalEl);
-        };
-
-        // Open Edit Transaction modal prefilled with data
-        window.openEditTransactionModal = function(tx) {
-            if (!tx) return;
-            $('#transaction-id').val(tx.Id || tx.id || '');
-            $('#account-id').val(tx.AccountId || tx.accountId || '');
-            $('#transaction-amount').val(tx.Amount || tx.amount || '');
-            // normalize date to yyyy-mm-dd
-            var d = tx.TransactionDate || tx.transactionDate || tx.Date || tx.date || '';
-            if (d) {
-                try { var dt = new Date(d); var yyyy = dt.getFullYear(); var mm = String(dt.getMonth()+1).padStart(2,'0'); var dd = String(dt.getDate()).padStart(2,'0'); $('#transaction-date').val(yyyy + '-' + mm + '-' + dd); } catch (ex) { $('#transaction-date').val(d); }
-            }
-            $('#transaction-Description').val(tx.Description || tx.description || '');
-            var modalEl = document.getElementById('addTransactionModal');
-            showModalElement(modalEl);
-        };
-
-        // Listen for any button that targets the Add Transaction modal and has a data-userid or data-accountid attribute
-        $(document).on('click', 'button[data-target="#addTransactionModal"]', function(e){
+        // open add person modal (explicit) — fallback if data-bs toggle isn't working
+        $(document).on('click', '#open-add-person', function(e){
             e.preventDefault();
-            var $btn = $(this);
-            var userId = $btn.data('accountid') || $btn.attr('data-accountid') || '';
-            window.openAddTransactionModal({ Id: userId });
+            var modalEl = document.getElementById('addPersonModal');
+            if (!modalEl) return;
+            if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(modalEl).show(); else $('#addPersonModal').modal('show');
         });
 
-        // Helper to open the update modal for the currently selected person
-        window.openUpdatePersonModalFromCurrent = function() {
-            var $selected = $('.person-item.active');
-            if (!$selected || !$selected.length) return;
-
-            // Build person object from data attributes (support PascalCase too)
-            var person = {
-                id: $selected.data('id') || $selected.attr('data-id'),
-                name: $selected.data('name') || $selected.attr('data-name'),
-                fullName: $selected.data('name') || $selected.attr('data-name'),
-                username: $selected.data('username') || $selected.attr('data-username'),
-                idNumber: $selected.data('idnumber') || $selected.attr('data-idnumber') || '',
-                email: $selected.data('email') || $selected.attr('data-email') || '',
-                phone: $selected.data('phone') || $selected.attr('data-phone') || ''
-            };
-
-            if (window.openUpdatePersonModal) {
-                window.openUpdatePersonModal(person);
-            } else {
-                console.warn('openUpdatePersonModal is not defined');
-            }
-        };
-
-        // Helper to delete the currently selected person via AJAX POST
-        window.deleteCurrentPerson = function() {
-            var $selected = $('.person-item.active');
-            if (!$selected || !$selected.length) return;
-            var id = $selected.data('id') || $selected.attr('data-id');
-            if (!id) return;
-
-            if (!confirm('Are you sure you want to remove this person? This cannot be undone.')) return;
-
-            // get the antiforgery token from the page
-            var token = $('input[name="__RequestVerificationToken"]').first().val();
-
-            $.post({
-                url: '/Person/DeletePerson',
-                data: { id: id, __RequestVerificationToken: token },
-                success: function(resp) {
-                    if (resp && resp.success) {
-                        // remove from list and clear details
-                        $selected.remove();
-                        $('#person-name').text('');
-                        $('#person-username-text').text('');
-                        $('#detail-fullname').text('');
-                        $('#detail-idnumber').text('');
-                        $('#detail-email').text('');
-                        $('#detail-phone').text('');
-                        $('#no-selection').removeClass('d-none');
-                        $('#person-details').addClass('d-none');
+        // submit add person via AJAX
+        $(document).on('submit', '#add-person-form', function(e){
+            e.preventDefault();
+            var $form = $(this);
+            $.ajax({
+                type: 'POST',
+                url: $form.attr('action') || '/Person/AddPerson',
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp){
+                if (resp && resp.success) {
+                    showToast('success', resp.message || 'Person created');
+                    var modalEl = document.getElementById('addPersonModal');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl);
+                        if (instance) instance.hide();
                     } else {
-                        alert('Failed to remove person');
+                        $('#addPersonModal').modal('hide');
                     }
-                },
-                error: function() {
-                    alert('Failed to remove person');
+                    setTimeout(function(){ window.location.reload(); }, 1200);
+                    return;
                 }
+                if (resp && resp.errors) showToast('error', (resp.errors || []).join('\n') || (resp && resp.message) || 'Failed to create person');
+                else showToast('error', (resp && resp.message) || 'Failed to create person');
+            }).fail(function(){
+                showToast('error', 'Failed to create person (network/server error)');
+            });
+        });
+
+        // open update modal from currently selected person
+        window.openUpdatePersonModalFromCurrent = function(){
+            var $sel = $('.person-item.active');
+            if (!$sel.length) return;
+            var person = {
+                Id: $sel.data('id'),
+                Name: $sel.data('name'),
+                Username: $sel.data('username'),
+                IdNumber: $sel.data('idnumber')
+            };
+            if (typeof openUpdatePersonModal === 'function') openUpdatePersonModal(person);
+        };
+
+        // submit update person via AJAX
+        $(document).on('submit', '#update-person-form', function(e){
+            e.preventDefault();
+            var $form = $(this);
+            $.ajax({
+                type: 'POST',
+                url: $form.attr('action') || '/Person/UpdatePerson',
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp){
+                if (resp && resp.success) {
+                    showToast('success', resp.message || 'Person updated');
+                    var modalEl = document.getElementById('updatePersonModal');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl);
+                        if (instance) instance.hide();
+                    } else {
+                        $('#updatePersonModal').modal('hide');
+                    }
+                    setTimeout(function(){ window.location.reload(); }, 1200);
+                    return;
+                }
+                if (resp && resp.errors) showToast('error', (resp.errors || []).join('\n') || (resp && resp.message) || 'Failed to update person');
+                else showToast('error', (resp && resp.message) || 'Failed to update person');
+            }).fail(function(){
+                showToast('error', 'Failed to update person (network/server error)');
+            });
+        });
+
+        // buttons that trigger add account
+        $(document).on('click', 'button[data-bs-target="#addAccountModal"], button[data-target="#addAccountModal"]', function(e){
+            e.preventDefault();
+            var userId = $(this).data('userid') || $(this).attr('data-userid') || '';
+            window.openAddAccountModal({ Id: userId });
+        });
+
+        // delete current person using confirmation modal
+        window.deleteCurrentPerson = function(){
+            var $sel = $('.person-item.active');
+            if (!$sel.length) return;
+            var id = $sel.data('id');
+            if (!id) return;
+            // set hidden input and show modal
+            var $confirmForm = $('#confirmDeletePersonForm');
+            var $confirmModal = $('#confirmDeletePersonModal');
+            var $confirmBtn = $('#confirmDeletePersonConfirm');
+            $confirmForm.find('#confirm-delete-person-id').val(id);
+            var bs = $confirmModal.length ? new bootstrap.Modal($confirmModal[0]) : null;
+            if (bs) bs.show(); else $confirmModal.modal('show');
+
+            // attach one-time handler for confirm button
+            $confirmBtn.off('click.confirm').on('click.confirm', function(){
+                var token = $confirmForm.find('input[name="__RequestVerificationToken"]').first().val();
+                $.ajax({
+                    type: 'POST',
+                    url: $confirmForm.attr('action') || '/Person/DeletePerson',
+                    data: { id: id, __RequestVerificationToken: token },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).done(function(resp){
+                if (resp && resp.success) {
+                        showToast('success', resp.message || 'Person removed');
+                        $sel.remove();
+                        clearDetails();
+                        if (bs) bs.hide(); else $confirmModal.modal('hide');
+                        return;
+                    }
+                    showToast('error', (resp && resp.message) || 'Failed to remove person');
+                    if (bs) bs.hide(); else $confirmModal.modal('hide');
+                }).fail(function(){
+                    showToast('error', 'Failed to remove person (network/server error)');
+                    if (bs) bs.hide(); else $confirmModal.modal('hide');
+                });
             });
         };
     });

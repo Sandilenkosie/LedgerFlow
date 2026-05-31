@@ -16,7 +16,11 @@ namespace WebUI.Controllers
     public class PersonController : Controller
     {
         private readonly ISender _sender;
-        public PersonController(ISender sender) { _sender = sender; }
+
+        public PersonController(ISender sender)
+        {
+            _sender = sender;
+        }
         public IActionResult Dashboard()
         {
             return View();
@@ -24,25 +28,51 @@ namespace WebUI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeletePerson([FromForm] Guid id)
+        public async Task<IActionResult> AddPerson([FromForm] PersonViewModel person)
         {
             try
             {
-                var cmd = new Application.Commands.DeletePersonCommand(id);
-                var result = await _sender.Send(cmd);
-                if (Request.IsAjaxRequest())
-                {
-                    return Json(new { success = result });
-                }
+                // create via application layer
+                var cmd = new CreatePersonCommand(person);
+                var created = await _sender.Send(cmd);
 
-                TempData["ToastMessage"] = "Person removed.";
-                TempData["ToastType"] = "success";
+                if (Request.IsAjaxRequest())
+                    return Json(new { success = true, message = "Person created.", type = "success" });
+
                 return RedirectToAction("People");
             }
             catch (Exception ex)
             {
-                TempData["ToastMessage"] = $"{ex.GetType().Name}: {ex.Message}";
-                TempData["ToastType"] = "error";
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+                }
+
+                return RedirectToAction("People");
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePerson([FromForm] Guid id)
+        {
+            try
+            {
+                var cmd = new DeletePersonCommand(id);
+                var result = await _sender.Send(cmd);
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = result, message = "Person removed.", type = "success" });
+                }
+
+                return RedirectToAction("People");
+            }
+            catch (Exception ex)
+            {
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+                }
+
                 return RedirectToAction("People");
             }
         }
@@ -50,7 +80,18 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> People([FromQuery] int page = 1, [FromQuery] int size = 10)
         {
-            return View(await _sender.Send(new GetPersonsQuery(page, size)));
+            ViewBag.Page = page;
+            ViewBag.PageSize = size;
+            var persons = await _sender.Send(new GetPersonsQuery(page, size));
+
+            // exclude the currently authenticated user from the list
+            var claimVal = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(claimVal, out var uid))
+            {
+                persons = persons.Where(p => p.Id != uid);
+            }
+
+            return View(persons);
         }
         public async Task<IActionResult> Accounts()
         {
@@ -66,21 +107,30 @@ namespace WebUI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddAccount([FromForm] Guid userId, [FromForm] decimal Balance = 0, [FromForm] string AccountType = "")
+        public async Task<IActionResult> AddAccount([FromForm] decimal Balance = 0, [FromForm] string AccountType = "")
         {
             try
             {
-                var cmd = new CreateAccountCommand(userId, Balance, AccountType ?? string.Empty);
-                var result = await _sender.Send(cmd);
-                TempData["ToastMessage"] = "Account created successfully.";
-                TempData["ToastType"] = "success";
-                return RedirectToAction("People");
+                // Use current user's NameIdentifier claim as owner
+                var claimVal = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(claimVal, out var uid))
+                    return Request.IsAjaxRequest()
+                        ? Json(new { success = false, message = "Invalid user id", type = "error" })
+                        : BadRequest("Invalid user id");
+
+                var cmd = new CreateAccountCommand(uid, Balance, AccountType ?? string.Empty);
+                await _sender.Send(cmd);
+
+                if (Request.IsAjaxRequest())
+                    return Json(new { success = true, message = "Account created.", type = "success" });
+
+                return RedirectToAction("Accounts");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                TempData["ToastMessage"] = $"{ex.GetType().Name}: {ex.Message}";
-                TempData["ToastType"] = "error";
+                if (Request.IsAjaxRequest())
+                    return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+
                 return RedirectToAction("Accounts");
             }
         }
@@ -99,7 +149,7 @@ namespace WebUI.Controllers
             {
                 if (Id != null && Id != Guid.Empty)
                 {
-                    var updateCmd = new Application.Commands.UpdateTransactionCommand(Id.Value, AccountId, Amount, TransactionDate, Description ?? string.Empty);
+                    var updateCmd = new UpdateTransactionCommand(Id.Value, AccountId, Amount, TransactionDate, Description ?? string.Empty);
                     var result = await _sender.Send(updateCmd);
                 }
                 else
@@ -107,20 +157,21 @@ namespace WebUI.Controllers
                     var cmd = new CreateTransactionCommand(AccountId, Amount, TransactionDate, Description ?? string.Empty);
                     var result = await _sender.Send(cmd);
                 }
-                TempData["ToastMessage"] = "Transaction created successfully.";
-                TempData["ToastType"] = "success";
-                ViewBag.ToastMessage = "Transaction created successfully.";
-                ViewBag.ToastType = "success";
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = true, message = "Transaction created successfully.", type = "success" });
+                }
+
                 return RedirectToAction("Transactions");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                TempData["ToastMessage"] = $"{ex.GetType().Name}: {ex.Message}";
-                TempData["ToastType"] = "error";
-                ViewBag.ToastMessage = $"{ex.GetType().Name}: {ex.Message}";
-                ViewBag.ToastType = "error";
-                return View("Transactions");
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+                }
+
+                return View("Accounts");
             }
         }
 
@@ -137,6 +188,7 @@ namespace WebUI.Controllers
                         Id = t.Id,
                         Amount = t.Amount,
                         TransactionDate = t.TransactionDate,
+                        Description = t.Description,
                         AccountId = t.AccountId,
                         AccountNumber = a.AccountNumber
                     }))
@@ -166,17 +218,41 @@ namespace WebUI.Controllers
             {
                 var cmd = new PersonCommand(person);
                 var result = await _sender.Send(cmd);
-                TempData["ToastMessage"] = "Person updated.";
-                TempData["ToastType"] = "success";
+
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = true, message = "Person updated.", type = "success" });
+                }
                 return RedirectToAction("People");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                var toastMsg = $"{ex.GetType().Name}: {ex.Message}";
-                TempData["ToastMessage"] = toastMsg;
-                TempData["ToastType"] = "error";
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+                }
+
                 return RedirectToAction("People");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAccount([FromForm] Guid accountId, [FromForm] bool Close = false)
+        {
+            try
+            {
+                var cmd = new UpdateAccountCommand(accountId, Close);
+                var result = await _sender.Send(cmd);
+
+                if (Request.IsAjaxRequest()) return Json(new { success = true, message = "Account updated.", type = "success" });
+
+                return RedirectToAction("Accounts");
+            }
+            catch (Exception ex)
+            {
+                if (Request.IsAjaxRequest()) return Json(new { success = false, message = ex.Message, type = "error", details = ex.ToString() });
+                return RedirectToAction("Accounts");
             }
         }
     }
