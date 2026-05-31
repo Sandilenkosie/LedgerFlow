@@ -6,13 +6,6 @@
             try { return JSON.parse(data); } catch (e) { return {}; }
         }
 
-        $('#addAccountModal').on('show.bs.modal', function(e){
-            var trigger = e.relatedTarget;
-            var userId = trigger ? ($(trigger).data('userid') || $(trigger).attr('data-userid') || '') : '';
-            if (!userId) userId = $('#person-id').val() || '';
-            $('#person-id').val(userId);
-        });
-
         $(document).on('click', '.person-item[data-account]', function(e){
             e.preventDefault();
             var $item = $(this);
@@ -122,33 +115,6 @@
             var modalEl = document.getElementById('addTransactionModal');
             if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal(modalEl).show();
             else $('#addTransactionModal').modal('show');
-        });
-
-        $(document).on('submit', '#add-account-form', function(e){
-            e.preventDefault();
-            var $form = $(this);
-            $.ajax({
-                type: 'POST',
-                url: $form.attr('action') || '/Person/AddAccount',
-                data: $form.serialize(),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            }).done(function(resp){
-                if (resp && resp.success) {
-                    if (window.toastr) toastr.success(resp.message || 'Account created');
-                    var modalEl = document.getElementById('addAccountModal');
-                    if (window.bootstrap && bootstrap.Modal) {
-                        var instance = bootstrap.Modal.getInstance(modalEl);
-                        if (instance) instance.hide();
-                    } else {
-                        $('#addAccountModal').modal('hide');
-                    }
-                    setTimeout(function(){ window.location.reload(); }, 1200);
-                    return;
-                }
-                if (window.toastr) toastr.error((resp && resp.message) || 'Failed to create account');
-            }).fail(function(){
-                if (window.toastr) toastr.error('Failed to create account (network/server error)');
-            });
         });
     });
 })(jQuery);

@@ -229,7 +229,8 @@
 
     </div>
 </div>
-@await Html.PartialAsync("partials/_AddPersonModal")
+@await Html.PartialAsync("Partials/_AddPersonModal")
+@await Html.PartialAsync("Partials/_AddAccountModel")
 
 <!-- Confirmation modal for deleting a person -->
 <form id="confirmDeletePersonForm" asp-controller="Person" asp-action="DeletePerson" method="post">

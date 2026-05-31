@@ -1,49 +1,91 @@
 (function($){
     $(function(){
         var $addAction = $('#add-account-action');
+        var $personId = $('#person-id');
+        var $addForm = $('#add-account-form');
+        var $modal = $('#addAccountModal');
 
         function updateAddAccountAction() {
-            var $sel = $('.person-item.active');
-            if ($sel.length) {
-                // enable
-                $addAction.removeClass('disabled-action').removeAttr('aria-disabled').attr('tabindex', '0');
-            } else {
-                // disable
-                $addAction.addClass('disabled-action').attr('aria-disabled','true').attr('tabindex','-1');
-            }
+            var has = $('.person-item.active').length > 0;
+            $addAction.toggleClass('disabled-action', !has)
+                      .attr('aria-disabled', !has ? 'true' : null)
+                      .attr('tabindex', !has ? '-1' : '0');
         }
 
-        // initialize state on load
         updateAddAccountAction();
 
-        // when a person is selected (delegated) update the action
-        $(document).on('click', '.person-item', function(e){
-            // small timeout to let other handlers (that add .active) run first
+        // when a person is selected update action state
+        $(document).on('click', '.person-item', function(){
+            // allow other handlers to run that set .active
             setTimeout(updateAddAccountAction, 0);
         });
 
-        // handle click on the action link
+        // small helper to resolve selected person id
+        function resolveSelectedPersonId() {
+            var id = $personId.val() || '';
+            if (!id) {
+                var $sel = $('.person-item.active');
+                if ($sel.length) id = $sel.data('id') || $sel.attr('data-id') || '';
+            }
+            return id || '';
+        }
+
+        // open add account: set hidden inputs then show modal
         $(document).on('click', '#add-account-action', function(e){
             e.preventDefault();
-            var $this = $(this);
-            if ($this.hasClass('disabled-action')) return;
-            var $sel = $('.person-item.active');
-            var person = null;
-            if ($sel.length) {
-                person = { Id: $sel.data('id'), Name: $sel.data('name') };
-            }
+            if ($(this).hasClass('disabled-action')) return;
+            var id = resolveSelectedPersonId();
+            $personId.val(id);
+            if ($addForm.length) $addForm.find('input[name="userId"]').val(id);
+
             if (typeof window.openAddAccountModal === 'function') {
-                window.openAddAccountModal(person);
+                window.openAddAccountModal({ Id: id });
+                return;
+            }
+            if ($modal.length) {
+                if (window.bootstrap && bootstrap.Modal) new bootstrap.Modal($modal[0]).show(); else $modal.modal('show');
             }
         });
 
-        // also observe mutations in case some other script toggles .active class
-        try {
-            var list = document.querySelector('.list-group');
-            if (list && window.MutationObserver) {
-                var mo = new MutationObserver(function(){ updateAddAccountAction(); });
-                mo.observe(list, { attributes: true, subtree: true, attributeFilter: ['class'] });
+        // ensure hidden input in form is set when modal opens
+        $modal.on('show.bs.modal', function(){
+            var id = resolveSelectedPersonId();
+            $personId.val(id);
+            if ($addForm.length) $addForm.find('input[name="userId"]').val(id);
+        });
+
+        // submit add-account via AJAX
+        $addForm.on('submit', function(e){
+            e.preventDefault();
+            var id = resolveSelectedPersonId();
+            if (!id) {
+                showToast('error', 'No person selected. Please select a person before creating an account.');
+                return;
             }
-        } catch(e){ /* ignore */ }
+            $personId.val(id);
+            $addForm.find('input[name="userId"]').val(id);
+
+            $.ajax({
+                type: 'POST',
+                url: $addForm.attr('action') || '/Person/AddAccount',
+                data: $addForm.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp){
+                if (resp && resp.success) {
+                    showToast('success', resp.message || 'Account created');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance($modal[0]);
+                        if (instance) instance.hide();
+                    } else {
+                        $modal.modal('hide');
+                    }
+                    setTimeout(function(){ window.location.reload(); }, 1200);
+                    return;
+                }
+                showToast('error', (resp && resp.message) || 'Failed to create account');
+            }).fail(function(){
+                showToast('error', 'Failed to create account (network/server error)');
+            });
+        });
     });
 })(jQuery);

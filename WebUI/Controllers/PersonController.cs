@@ -99,26 +99,21 @@ namespace WebUI.Controllers
 
         }
 
-        [HttpGet]
-        public async Task<IActionResult> AddAccountModal()
-        {
-            return View();
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddAccount([FromForm] decimal Balance = 0, [FromForm] string AccountType = "")
+        public async Task<IActionResult> AddAccount([FromForm] Guid userId, [FromForm] decimal Balance = 0, [FromForm] string AccountType = "")
         {
             try
             {
-                // Use current user's NameIdentifier claim as owner
-                var claimVal = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!Guid.TryParse(claimVal, out var uid))
-                    return Request.IsAjaxRequest()
-                        ? Json(new { success = false, message = "Invalid user id", type = "error" })
-                        : BadRequest("Invalid user id");
+                // Validate userId before sending command to avoid FK violations
+                if (userId == Guid.Empty)
+                {
+                    if (Request.IsAjaxRequest())
+                        return Json(new { success = false, message = "Missing or invalid userId.", type = "error" });
 
-                var cmd = new CreateAccountCommand(uid, Balance, AccountType ?? string.Empty);
+                    return RedirectToAction("Accounts");
+                }
+                var cmd = new CreateAccountCommand(userId, Balance, AccountType ?? string.Empty);
                 await _sender.Send(cmd);
 
                 if (Request.IsAjaxRequest())
